@@ -40,26 +40,20 @@ export async function retryFulfillment(orderId: string): Promise<RetryResult> {
 }
 
 /**
- * Send a simulated payment webhook to the (public) REST endpoint. The
- * idempotencyKey is deterministic so "Simulate Duplicate" re-sends the same event.
+ * Trigger a simulated payment webhook. Calls our own Next route, which signs the
+ * payload (HMAC) server-side and forwards it to the API — so the signing secret
+ * never touches the browser. The deterministic idempotencyKey lets "Simulate
+ * Duplicate" re-send the exact same event.
  */
 export async function sendPaymentWebhook(params: {
   orderId: string;
   amount: number;
   duplicate?: boolean;
 }): Promise<{ status: string; message: string }> {
-  const { orderId, amount, duplicate } = params;
-  const res = await fetch(`${API_URL}/webhooks/payment`, {
+  const res = await fetch('/api/simulate-webhook', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      eventId: `evt_${orderId}_demo`,
-      orderId,
-      type: 'payment.succeeded',
-      amount,
-      idempotencyKey: `payment_${orderId}_demo`,
-      correlationId: `corr_${orderId}_${duplicate ? 'dup' : 'first'}`,
-    }),
+    body: JSON.stringify(params),
   });
   return (await res.json()) as { status: string; message: string };
 }

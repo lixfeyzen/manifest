@@ -17,6 +17,9 @@ const envSchema = z
     SESSION_SECRET: z.string().min(16).default(DEV_SESSION_SECRET),
     // Exact browser origin allowed to send credentialed requests (CORS).
     WEB_ORIGIN: z.string().url().default('http://localhost:3001'),
+    // Shared secret for HMAC-signing the payment webhook (the "provider" signs,
+    // this API verifies). Mirrors how Stripe/Midtrans sign their webhooks.
+    WEBHOOK_SECRET: z.string().min(8).default('dev-webhook-secret-change-me'),
   })
   // Never allow the throwaway dev secret in production.
   .refine((e) => e.NODE_ENV !== 'production' || e.SESSION_SECRET !== DEV_SESSION_SECRET, {

@@ -1,10 +1,15 @@
+import { createHmac } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import { prisma } from '@manifest/db';
 import { buildServer } from '../src/server.js';
+import { env } from '../src/env.js';
 import { fulfillmentQueue, redisConnection } from '../src/queue.js';
 import { createOrder } from '../src/services/order-service.js';
 import { resetAndSeed } from './helpers.js';
+
+const sign = (body: string) =>
+  createHmac('sha256', env.WEBHOOK_SECRET).update(body).digest('hex');
 
 describe('payment webhook (REST integration)', () => {
   let app: FastifyInstance;
@@ -28,18 +33,19 @@ describe('payment webhook (REST integration)', () => {
   });
 
   async function postWebhook(orderId: string, correlationId: string) {
+    const body = JSON.stringify({
+      eventId: `evt_${orderId}`,
+      orderId,
+      type: 'payment.succeeded',
+      amount: 120000,
+      idempotencyKey: `payment_${orderId}_demo`,
+      correlationId,
+    });
     const res = await app.inject({
       method: 'POST',
       url: '/webhooks/payment',
-      headers: { 'content-type': 'application/json' },
-      payload: JSON.stringify({
-        eventId: `evt_${orderId}`,
-        orderId,
-        type: 'payment.succeeded',
-        amount: 120000,
-        idempotencyKey: `payment_${orderId}_demo`,
-        correlationId,
-      }),
+      headers: { 'content-type': 'application/json', 'x-manifest-signature': sign(body) },
+      payload: body,
     });
     return { status: res.statusCode, body: res.json() };
   }
@@ -105,5 +111,36 @@ describe('payment webhook (REST integration)', () => {
   it('returns 404 for a webhook referencing a missing order', async () => {
     const { status } = await postWebhook('00000000-0000-0000-0000-000000000000', 'corr_missing');
     expect(status).toBe(404);
+  });
+
+  it('rejects a webhook with a missing or invalid signature (401)', async () => {
+    const order = await newOrder();
+    const body = JSON.stringify({
+      eventId: `evt_${order.id}`,
+      orderId: order.id,
+      type: 'payment.succeeded',
+      amount: 120000,
+      idempotencyKey: `payment_${order.id}_demo`,
+      correlationId: 'corr_unsigned',
+    });
+
+    const noSig = await app.inject({
+      method: 'POST',
+      url: '/webhooks/payment',
+      headers: { 'content-type': 'application/json' },
+      payload: body,
+    });
+    expect(noSig.statusCode).toBe(401);
+
+    const badSig = await app.inject({
+      method: 'POST',
+      url: '/webhooks/payment',
+      headers: { 'content-type': 'application/json', 'x-manifest-signature': 'deadbeef' },
+      payload: body,
+    });
+    expect(badSig.statusCode).toBe(401);
+
+    // And nothing was processed.
+    expect(await prisma.payment.count({ where: { orderId: order.id } })).toBe(0);
   });
 });
