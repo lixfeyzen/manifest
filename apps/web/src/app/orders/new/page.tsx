@@ -52,7 +52,7 @@ export default function NewOrderPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-5 rounded-xl border border-brand-border bg-brand-surface p-6 shadow-sm"
+        className="space-y-5 rounded-xl border border-brand-border bg-brand-surface p-6"
       >
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-brand-ink">

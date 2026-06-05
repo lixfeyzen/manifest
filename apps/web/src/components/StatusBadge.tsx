@@ -1,36 +1,53 @@
 import type { FulfillmentJobStatus, OrderStatus } from '@/lib/types';
 
-const ORDER_STYLES: Record<OrderStatus, string> = {
-  PENDING: 'bg-brand-bg text-brand-muted ring-brand-border',
-  PAID: 'bg-brand-primary-soft text-brand-primary ring-brand-primary/30',
-  FULFILLING: 'bg-amber-500/10 text-amber-300 ring-amber-500/20',
-  FULFILLED: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20',
-  FAILED: 'bg-red-500/10 text-red-400 ring-red-500/20',
+// One status presentation across the whole app: a small colour dot + the status
+// word. No pill background, no ring — calm and consistent.
+type Tone = 'neutral' | 'purple' | 'amber' | 'green' | 'red';
+
+const DOT: Record<Tone, string> = {
+  neutral: 'bg-brand-muted',
+  purple: 'bg-brand-primary',
+  amber: 'bg-amber-500',
+  green: 'bg-emerald-500',
+  red: 'bg-red-500',
 };
 
-const JOB_STYLES: Record<FulfillmentJobStatus, string> = {
-  QUEUED: 'bg-brand-bg text-brand-muted ring-brand-border',
-  PROCESSING: 'bg-amber-500/10 text-amber-300 ring-amber-500/20',
-  COMPLETED: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20',
-  FAILED: 'bg-red-500/10 text-red-400 ring-red-500/20',
+const ORDER_TONE: Record<OrderStatus, Tone> = {
+  PENDING: 'neutral',
+  PAID: 'purple',
+  FULFILLING: 'amber',
+  FULFILLED: 'green',
+  FAILED: 'red',
 };
 
-export function StatusBadge({ status }: { status: OrderStatus }) {
+const JOB_TONE: Record<FulfillmentJobStatus, Tone> = {
+  QUEUED: 'neutral',
+  PROCESSING: 'amber',
+  COMPLETED: 'green',
+  FAILED: 'red',
+};
+
+export function StatusLabel({
+  label,
+  tone,
+  className = '',
+}: {
+  label: string;
+  tone: Tone;
+  className?: string;
+}) {
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${ORDER_STYLES[status]}`}
-    >
-      {status}
+    <span className={`inline-flex items-center gap-1.5 font-medium text-brand-ink ${className}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${DOT[tone]}`} />
+      <span>{label}</span>
     </span>
   );
 }
 
+export function StatusBadge({ status }: { status: OrderStatus }) {
+  return <StatusLabel label={status} tone={ORDER_TONE[status]} className="text-xs" />;
+}
+
 export function JobStatusBadge({ status }: { status: FulfillmentJobStatus }) {
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${JOB_STYLES[status]}`}
-    >
-      {status}
-    </span>
-  );
+  return <StatusLabel label={status} tone={JOB_TONE[status]} className="text-xs" />;
 }

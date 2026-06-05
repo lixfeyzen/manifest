@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertCircle, CheckCircle2, Info, Loader2, RefreshCw, Zap } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info, Loader2, RefreshCw } from 'lucide-react';
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { retryFulfillment, sendPaymentWebhook } from '@/lib/queries';
@@ -68,9 +68,9 @@ export function OrderActions({
               return { kind: 'ok', text: `Webhook ${res.status} — ${res.message}` };
             })
           }
-          className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-3.5 py-2 text-sm font-medium text-white shadow-sm shadow-brand-primary/30 transition-colors hover:bg-brand-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {busy === 'pay' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+          {busy === 'pay' ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           Simulate Payment Webhook
         </button>
 
@@ -125,7 +125,7 @@ export function OrderActions({
           return (
             <div
               key={t.id}
-              className="pointer-events-auto flex items-start gap-2.5 rounded-lg border border-brand-border bg-brand-surface p-3 shadow-lg shadow-brand-ink/5"
+              className="pointer-events-auto flex items-start gap-2.5 rounded-lg border border-brand-border bg-brand-surface-2 p-3"
             >
               <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${color}`} />
               <p className="text-sm text-brand-ink">{t.text}</p>

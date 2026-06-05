@@ -29,7 +29,7 @@ export function Sidebar() {
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-brand-border bg-brand-surface lg:flex">
       <div className="flex h-16 items-center gap-2.5 border-b border-brand-border px-5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-primary text-sm font-bold text-white shadow-sm shadow-brand-primary/30">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-primary text-sm font-bold text-white">
           M
         </span>
         <div className="leading-tight">
@@ -62,13 +62,8 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-brand-border p-4">
-        <div className="rounded-lg bg-brand-bg p-3">
-          <p className="text-xs font-medium text-brand-ink">Event-driven fulfillment</p>
-          <p className="mt-0.5 text-[11px] leading-relaxed text-brand-muted">
-            Idempotent webhooks · retry-safe jobs
-          </p>
-        </div>
+      <div className="p-5">
+        <p className="text-[11px] leading-relaxed text-brand-muted">Event-driven fulfillment ops</p>
       </div>
     </aside>
   );
