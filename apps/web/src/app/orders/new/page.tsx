@@ -52,7 +52,7 @@ export default function NewOrderPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+        className="space-y-5 rounded-xl border border-brand-border bg-brand-surface p-6 shadow-sm"
       >
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-slate-700">
@@ -64,7 +64,7 @@ export default function NewOrderPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
           />
         </div>
 
@@ -76,7 +76,7 @@ export default function NewOrderPage() {
             id="product"
             value={sku}
             onChange={(e) => setSku(e.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
           >
             {inventory.map((item) => (
               <option key={item.sku} value={item.sku}>
@@ -97,11 +97,11 @@ export default function NewOrderPage() {
             required
             value={quantity}
             onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-            className="mt-1 w-32 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+            className="mt-1 w-32 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
           />
         </div>
 
-        <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+        <div className="flex items-center justify-between border-t border-brand-border pt-4">
           <span className="text-sm text-slate-500">Total</span>
           <span className="text-lg font-semibold tabular-nums text-slate-900">
             {formatCurrency(total)}
@@ -117,7 +117,7 @@ export default function NewOrderPage() {
         <button
           type="submit"
           disabled={submitting || !sku}
-          className="w-full rounded-md bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+          className="w-full rounded-md bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-primary-dark disabled:opacity-50"
         >
           {submitting ? 'Creating…' : 'Create order'}
         </button>

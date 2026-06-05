@@ -37,7 +37,7 @@ export default async function OrdersPage({
           </div>
           <Link
             href="/orders/new"
-            className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700"
+            className="rounded-md bg-brand-primary px-3 py-2 text-sm font-medium text-white hover:bg-brand-primary-dark"
           >
             New Order
           </Link>
@@ -54,8 +54,8 @@ export default async function OrdersPage({
                 href={href}
                 className={`rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset ${
                   isActive
-                    ? 'bg-slate-900 text-white ring-slate-900'
-                    : 'bg-white text-slate-600 ring-slate-200 hover:bg-slate-50'
+                    ? 'bg-brand-primary text-white ring-brand-primary'
+                    : 'bg-brand-surface text-slate-600 ring-brand-border hover:bg-brand-bg'
                 }`}
               >
                 {s}
@@ -64,14 +64,14 @@ export default async function OrdersPage({
           })}
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-brand-border bg-brand-surface shadow-sm">
           {orders.length === 0 ? (
             <div className="px-5 py-12 text-center text-sm text-slate-500">
               No orders found for this filter.
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-100 bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+              <thead className="border-b border-brand-border bg-brand-bg text-left text-xs font-medium uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-5 py-3">Order</th>
                   <th className="px-5 py-3">Customer</th>
@@ -81,13 +81,13 @@ export default async function OrdersPage({
                   <th className="px-5 py-3">Created</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-brand-border">
                 {orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-slate-50">
+                  <tr key={order.id} className="hover:bg-brand-bg">
                     <td className="px-5 py-3">
                       <Link
                         href={`/orders/${order.id}`}
-                        className="font-mono text-blue-600 hover:text-blue-700"
+                        className="font-mono text-brand-primary hover:text-brand-primary-dark"
                       >
                         {shortId(order.id)}
                       </Link>

@@ -26,24 +26,24 @@ export default async function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-          <MetricCard label="Total orders" value={metrics.totalOrders} />
-          <MetricCard label="Pending" value={metrics.pendingOrders} accent="slate" />
-          <MetricCard label="Paid" value={metrics.paidOrders} accent="blue" />
+          <MetricCard label="Total orders" value={metrics.totalOrders} accent="ink" />
+          <MetricCard label="Pending" value={metrics.pendingOrders} accent="muted" />
+          <MetricCard label="Paid" value={metrics.paidOrders} accent="primary" />
           <MetricCard label="Fulfilled" value={metrics.fulfilledOrders} accent="emerald" />
           <MetricCard label="Failed jobs" value={metrics.failedJobs} accent="red" />
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+        <div className="rounded-xl border border-brand-border bg-brand-surface shadow-sm">
+          <div className="flex items-center justify-between border-b border-brand-border px-5 py-4">
             <h2 className="text-sm font-semibold text-slate-900">Recent orders</h2>
-            <Link href="/orders" className="text-sm font-medium text-blue-600 hover:text-blue-700">
+            <Link href="/orders" className="text-sm font-medium text-brand-primary hover:text-brand-primary-dark">
               View all →
             </Link>
           </div>
           {recent.length === 0 ? (
             <div className="px-5 py-10 text-center text-sm text-slate-500">
               No orders yet.{' '}
-              <Link href="/orders/new" className="font-medium text-blue-600">
+              <Link href="/orders/new" className="font-medium text-brand-primary">
                 Create your first order
               </Link>
               .
@@ -54,7 +54,7 @@ export default async function DashboardPage() {
                 <li key={order.id}>
                   <Link
                     href={`/orders/${order.id}`}
-                    className="flex items-center justify-between px-5 py-3 hover:bg-slate-50"
+                    className="flex items-center justify-between px-5 py-3 hover:bg-brand-bg"
                   >
                     <div className="min-w-0">
                       <p className="font-mono text-sm text-slate-900">{shortId(order.id)}</p>

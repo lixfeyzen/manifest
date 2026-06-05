@@ -21,7 +21,7 @@ export function Timeline({ events }: { events: OrderEvent[] }) {
     return <p className="text-sm text-slate-400">No events yet.</p>;
   }
   return (
-    <ol className="relative space-y-4 border-l border-slate-200 pl-4">
+    <ol className="relative space-y-4 border-l border-brand-border pl-4">
       {events.map((event) => (
         <li key={event.id} className="relative">
           <span

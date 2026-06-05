@@ -44,7 +44,7 @@ export function OrderActions({
   const canRetry = status === 'FAILED';
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-brand-border bg-brand-surface p-5 shadow-sm">
       <div className="flex flex-wrap gap-3">
         <button
           disabled={!canPay || busy !== null}
@@ -54,7 +54,7 @@ export function OrderActions({
               return { kind: 'ok', text: `Webhook ${res.status}: ${res.message}` };
             })
           }
-          className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-md bg-brand-primary px-3 py-2 text-sm font-medium text-white hover:bg-brand-primary-dark disabled:cursor-not-allowed disabled:opacity-40"
         >
           {busy === 'pay' ? 'Sending…' : 'Simulate Payment Webhook'}
         </button>
@@ -70,7 +70,7 @@ export function OrderActions({
               };
             })
           }
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-md border border-slate-300 bg-brand-surface px-3 py-2 text-sm font-medium text-slate-700 hover:bg-brand-bg disabled:cursor-not-allowed disabled:opacity-40"
         >
           {busy === 'dup' ? 'Sending…' : 'Simulate Duplicate Webhook'}
         </button>

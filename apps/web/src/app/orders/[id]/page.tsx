@@ -72,7 +72,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   <th className="pb-2 text-right">Subtotal</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-brand-border">
                 {order.items.map((item) => (
                   <tr key={item.id}>
                     <td className="py-2 text-slate-700">
@@ -151,7 +151,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-xl border border-brand-border bg-brand-surface p-5 shadow-sm">
       <h2 className="mb-3 text-sm font-semibold text-slate-900">{title}</h2>
       {children}
     </section>
