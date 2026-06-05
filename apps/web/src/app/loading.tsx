@@ -20,8 +20,11 @@ export default function DashboardLoading() {
 
       {/* Chart */}
       <div className="rounded-xl border border-brand-border bg-brand-surface p-5">
-        <div className={shimmer('mb-4 h-4 w-28')} />
-        <div className={shimmer('h-[200px] w-full')} />
+        <div className="mb-3 space-y-1.5">
+          <div className={shimmer('h-4 w-28')} />
+          <div className={shimmer('h-3 w-44')} />
+        </div>
+        <div className={shimmer('h-[240px] w-full')} />
       </div>
 
       {/* Recent orders */}

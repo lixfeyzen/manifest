@@ -11,11 +11,16 @@ const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET ?? 'dev-webhook-secret-change-
  * and POST a webhook to us.
  */
 export async function POST(request: Request): Promise<Response> {
-  const { orderId, amount, duplicate } = (await request.json()) as {
-    orderId: string;
-    amount: number;
-    duplicate?: boolean;
-  };
+  let parsed: { orderId?: unknown; amount?: unknown; duplicate?: unknown };
+  try {
+    parsed = await request.json();
+  } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  const { orderId, amount, duplicate } = parsed;
+  if (typeof orderId !== 'string' || !orderId || typeof amount !== 'number') {
+    return Response.json({ error: 'orderId (string) and amount (number) are required' }, { status: 400 });
+  }
 
   const payload = {
     eventId: `evt_${orderId}_demo`,

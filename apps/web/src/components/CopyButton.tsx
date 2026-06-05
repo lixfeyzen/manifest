@@ -12,7 +12,7 @@ export function CopyButton({ value, ariaLabel = 'Copy' }: { value: string; ariaL
     <Tooltip label={copied ? 'Copied!' : ariaLabel}>
       <button
         type="button"
-        aria-label={ariaLabel}
+        aria-label={copied ? 'Copied!' : ariaLabel}
         onClick={async () => {
           try {
             await navigator.clipboard.writeText(value);
@@ -29,6 +29,9 @@ export function CopyButton({ value, ariaLabel = 'Copy' }: { value: string; ariaL
         ) : (
           <Copy className="h-3.5 w-3.5" />
         )}
+        <span className="sr-only" aria-live="polite">
+          {copied ? 'Copied' : ''}
+        </span>
       </button>
     </Tooltip>
   );

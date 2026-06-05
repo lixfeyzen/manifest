@@ -22,7 +22,10 @@ export function AutoRefresh({ intervalMs = 3000 }: { intervalMs?: number }) {
 
   return (
     <Tooltip label={`Auto-refreshing every ${Math.round(intervalMs / 1000)}s`}>
-      <span className="inline-flex items-center gap-1.5 text-xs text-brand-muted">
+      <span
+        aria-label={`Live — auto-refreshing every ${Math.round(intervalMs / 1000)} seconds`}
+        className="inline-flex items-center gap-1.5 text-xs text-brand-muted"
+      >
         <span className="mf-pulse h-1.5 w-1.5 rounded-full bg-emerald-500" />
         Live
       </span>
