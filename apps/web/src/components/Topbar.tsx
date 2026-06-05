@@ -16,7 +16,6 @@ export function Topbar({ email }: { email: string }) {
           <Logo className="h-6 w-6 text-brand-primary" />
           <span className="text-sm font-semibold tracking-tight text-brand-ink">Manifest</span>
         </Link>
-        <p className="hidden text-sm text-brand-muted lg:block">Fulfillment Operations</p>
       </div>
 
       <div className="flex items-center gap-3">

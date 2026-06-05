@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { ApiError } from '@/components/ApiError';
 import { AutoRefresh } from '@/components/AutoRefresh';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatCurrency, formatRelative, shortId } from '@/lib/format';
+import { eventMeta } from '@/lib/events';
+import { formatCurrency, formatCustomerName, formatRelative, shortId } from '@/lib/format';
 import { fetchOrders } from '@/lib/queries.server';
 import type { OrderStatus } from '@/lib/types';
 
@@ -96,15 +97,29 @@ export default async function OrdersPage({
                       {shortId(order.id)}
                     </Link>
                   </td>
-                  <td className="py-3 text-brand-ink">{order.customerEmail}</td>
+                  <td className="py-3">
+                    <div className="leading-tight">
+                      <p className="text-brand-ink">{formatCustomerName(order.customerEmail)}</p>
+                      <p className="text-xs text-brand-muted">{order.customerEmail}</p>
+                    </div>
+                  </td>
                   <td className="py-3 text-right tabular-nums text-brand-ink">
                     {formatCurrency(order.totalAmount)}
                   </td>
                   <td className="py-3">
                     <StatusBadge status={order.status} />
                   </td>
-                  <td className="py-3 font-mono text-xs text-brand-muted">
-                    {order.lastEvent?.type ?? '—'}
+                  <td className="py-3">
+                    {order.lastEvent ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs text-brand-muted">
+                        <span
+                          className={`h-1.5 w-1.5 shrink-0 rounded-full ${eventMeta(order.lastEvent.type).dot}`}
+                        />
+                        {eventMeta(order.lastEvent.type).label}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-brand-muted">—</span>
+                    )}
                   </td>
                   <td className="py-3 text-right text-xs text-brand-muted">
                     {formatRelative(order.createdAt)}

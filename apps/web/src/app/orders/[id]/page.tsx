@@ -4,7 +4,13 @@ import { ApiError } from '@/components/ApiError';
 import { AutoRefresh } from '@/components/AutoRefresh';
 import { CopyButton } from '@/components/CopyButton';
 import { JobStatusBadge, StatusBadge } from '@/components/StatusBadge';
-import { formatCurrency, formatDateTime, formatRelative, shortId } from '@/lib/format';
+import {
+  formatCurrency,
+  formatCustomerName,
+  formatDateTime,
+  formatRelative,
+  shortId,
+} from '@/lib/format';
 import { fetchOrder } from '@/lib/queries.server';
 import { OrderActions } from './OrderActions';
 import { StatusStepper } from './StatusStepper';
@@ -45,7 +51,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <CopyButton value={order.id} ariaLabel="Copy order id" />
               <StatusBadge status={order.status} />
             </div>
-            <p className="mt-1.5 text-sm text-brand-muted">
+            <p className="mt-1.5 text-sm font-medium text-brand-ink">
+              {formatCustomerName(order.customerEmail)}
+            </p>
+            <p className="text-sm text-brand-muted">
               {order.customerEmail} ·{' '}
               <span title={formatDateTime(order.createdAt)}>created {formatRelative(order.createdAt)}</span>
             </p>

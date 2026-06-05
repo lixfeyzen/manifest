@@ -24,6 +24,20 @@ export function shortId(id: string): string {
 }
 
 /**
+ * Derive a human display name from an email's local part:
+ * "olivia.martin@gmail.com" → "Olivia Martin". Falls back to the email.
+ */
+export function formatCustomerName(email: string): string {
+  const local = email.split('@')[0] ?? '';
+  const name = local
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+    .join(' ');
+  return name || email;
+}
+
+/**
  * Human-relative time ("just now", "5m ago", "3h ago"). Computed at render time;
  * pair it with the absolute time in a title attribute for precision on hover.
  */

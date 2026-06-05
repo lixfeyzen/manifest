@@ -9,7 +9,7 @@ import type { InventoryItem } from '@/lib/types';
 export default function NewOrderPage() {
   const router = useRouter();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [email, setEmail] = useState('customer@example.com');
+  const [email, setEmail] = useState('');
   const [sku, setSku] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -62,6 +62,7 @@ export default function NewOrderPage() {
             id="email"
             type="email"
             required
+            placeholder="name@company.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="mt-1 w-full rounded-md border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-ink focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"

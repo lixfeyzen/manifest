@@ -1,3 +1,4 @@
+import { AlertTriangle, CheckCircle2, Clock, CreditCard, Layers, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { ApiError } from '@/components/ApiError';
 import { AutoRefresh } from '@/components/AutoRefresh';
@@ -5,7 +6,7 @@ import { MetricCard } from '@/components/MetricCard';
 import { OrdersChart, type ChartPoint } from '@/components/OrdersChart';
 import { Reveal } from '@/components/Reveal';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatCurrency, formatRelative, shortId } from '@/lib/format';
+import { formatCurrency, formatCustomerName, formatRelative } from '@/lib/format';
 import { fetchDashboardMetrics, fetchOrders } from '@/lib/queries.server';
 import type { OrderStatus } from '@/lib/types';
 
@@ -86,26 +87,42 @@ export default async function DashboardPage() {
       ? Math.round((metrics.fulfilledOrders / metrics.totalOrders) * 100)
       : 0;
 
-    const cards = [
+    const cards: Array<{
+      label: string;
+      value: number;
+      icon: LucideIcon;
+      tone: 'violet' | 'amber' | 'blue' | 'emerald' | 'red';
+      hint?: { text: string; tone: 'good' | 'bad' | 'muted'; dir?: 'up' | 'down' };
+    }> = [
       {
         label: 'Total orders',
         value: metrics.totalOrders,
+        icon: Layers,
+        tone: 'violet',
         hint: {
           text: `${newToday} today`,
-          tone: (newToday > 0 ? 'good' : 'muted') as 'good' | 'muted',
-          dir: newToday > 0 ? ('up' as const) : undefined,
+          tone: newToday > 0 ? 'good' : 'muted',
+          dir: newToday > 0 ? 'up' : undefined,
         },
       },
-      { label: 'Pending', value: metrics.pendingOrders, hint: { text: 'awaiting payment', tone: 'muted' as const } },
-      { label: 'Paid', value: metrics.paidOrders, hint: { text: 'in fulfillment', tone: 'muted' as const } },
-      { label: 'Fulfilled', value: metrics.fulfilledOrders, hint: { text: `${fulfilledPct}% of total`, tone: 'good' as const } },
+      { label: 'Pending', value: metrics.pendingOrders, icon: Clock, tone: 'amber' },
+      { label: 'Paid', value: metrics.paidOrders, icon: CreditCard, tone: 'blue' },
+      {
+        label: 'Fulfilled',
+        value: metrics.fulfilledOrders,
+        icon: CheckCircle2,
+        tone: 'emerald',
+        hint: { text: `${fulfilledPct}% of total`, tone: 'good' },
+      },
       {
         label: 'Failed jobs',
         value: metrics.failedJobs,
+        icon: AlertTriangle,
+        tone: 'red',
         hint:
           metrics.failedJobs > 0
-            ? { text: 'needs attention', tone: 'bad' as const }
-            : { text: 'all clear', tone: 'muted' as const },
+            ? { text: 'needs attention', tone: 'bad' }
+            : { text: 'all clear', tone: 'muted' },
       },
     ];
 
@@ -125,7 +142,7 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
           {cards.map((c, i) => (
             <Reveal key={c.label} delay={i * 40}>
-              <MetricCard label={c.label} value={c.value} hint={c.hint} />
+              <MetricCard label={c.label} value={c.value} icon={c.icon} tone={c.tone} hint={c.hint} />
             </Reveal>
           ))}
         </div>
@@ -135,7 +152,7 @@ export default async function DashboardPage() {
           <div className="rounded-xl border border-brand-border bg-brand-surface p-5 shadow-sm">
             <div className="mb-3">
               <h2 className="text-sm font-semibold text-brand-ink">Throughput</h2>
-              <p className="text-xs text-brand-muted">Orders per day by stage · last {DAYS} days</p>
+              <p className="text-xs text-brand-muted">Last {DAYS} days</p>
             </div>
             <OrdersChart data={chart} />
           </div>
@@ -167,7 +184,9 @@ export default async function DashboardPage() {
                       className="relative flex items-center justify-between px-5 py-3 transition-colors duration-150 before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:origin-center before:scale-y-0 before:bg-brand-primary before:transition-transform before:duration-150 hover:bg-brand-surface-2 hover:before:scale-y-100"
                     >
                       <div className="min-w-0">
-                        <p className="font-mono text-sm text-brand-ink">{shortId(order.id)}</p>
+                        <p className="truncate text-sm font-medium text-brand-ink">
+                          {formatCustomerName(order.customerEmail)}
+                        </p>
                         <p className="truncate text-xs text-brand-muted">{order.customerEmail}</p>
                       </div>
                       <div className="flex items-center gap-5">
