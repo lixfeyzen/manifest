@@ -3,20 +3,21 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, type LucideIcon, PlusCircle, ShoppingCart } from 'lucide-react';
+import { Wordmark } from './Logo';
 
-interface NavItem {
+export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
 }
 
-const NAV: NavItem[] = [
+export const NAV: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/orders', label: 'Orders', icon: ShoppingCart },
   { href: '/orders/new', label: 'New Order', icon: PlusCircle },
 ];
 
-function isActive(pathname: string, href: string): boolean {
+export function isNavActive(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/';
   if (href === '/orders/new') return pathname === '/orders/new';
   // Orders matches /orders and /orders/[id], but not /orders/new.
@@ -28,14 +29,8 @@ export function Sidebar() {
 
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-brand-border bg-brand-surface lg:flex">
-      <div className="flex h-16 items-center gap-2.5 border-b border-brand-border px-5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-primary text-sm font-bold text-white">
-          M
-        </span>
-        <div className="leading-tight">
-          <span className="block text-sm font-semibold text-brand-ink">Manifest</span>
-          <span className="block text-[11px] text-brand-muted">Fulfillment Ops</span>
-        </div>
+      <div className="flex h-16 items-center border-b border-brand-border px-5">
+        <Wordmark subtitle="Fulfillment Ops" />
       </div>
 
       <nav className="flex-1 space-y-1 p-3">
@@ -43,7 +38,7 @@ export function Sidebar() {
           Menu
         </p>
         {NAV.map((item) => {
-          const active = isActive(pathname, item.href);
+          const active = isNavActive(pathname, item.href);
           const Icon = item.icon;
           return (
             <Link

@@ -73,7 +73,8 @@ export default async function OrdersPage({
             .
           </p>
         ) : (
-          <table className="w-full text-sm">
+          <div className="-mx-4 overflow-x-auto px-4 lg:mx-0 lg:px-0">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="border-b border-brand-border text-left text-xs font-medium uppercase tracking-wide text-brand-muted">
               <tr>
                 <th className="py-2 font-medium">Order</th>
@@ -112,6 +113,7 @@ export default async function OrdersPage({
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     );

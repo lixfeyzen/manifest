@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Wordmark } from '@/components/Logo';
 import { register } from '@/lib/queries';
 
 export default function RegisterPage() {
@@ -28,16 +29,14 @@ export default function RegisterPage() {
 
   return (
     <div className="w-full max-w-sm">
-      <div className="mb-6 flex items-center gap-2.5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-primary text-sm font-bold text-white">
-          M
-        </span>
-        <span className="text-lg font-semibold tracking-tight text-brand-ink">Manifest</span>
+      <div className="mb-6 flex justify-center">
+        <Wordmark />
       </div>
-      <h1 className="text-xl font-semibold text-brand-ink">Create account</h1>
-      <p className="mt-1 text-sm text-brand-muted">Set up a staff account for the ops console.</p>
+      <div className="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
+        <h1 className="text-xl font-semibold tracking-tight text-brand-ink">Create account</h1>
+        <p className="mt-1 text-sm text-brand-muted">Set up a staff account for the ops console.</p>
 
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        <form onSubmit={onSubmit} className="mt-6 space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-brand-ink">
             Email
@@ -80,12 +79,13 @@ export default function RegisterPage() {
         </button>
       </form>
 
-      <p className="mt-4 text-sm text-brand-muted">
-        Already have an account?{' '}
-        <Link href="/login" className="text-brand-ink hover:text-brand-primary">
-          Sign in
-        </Link>
-      </p>
+        <p className="mt-5 text-sm text-brand-muted">
+          Already have an account?{' '}
+          <Link href="/login" className="text-brand-ink hover:text-brand-primary">
+            Sign in
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

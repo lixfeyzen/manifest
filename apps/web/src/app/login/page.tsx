@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Wordmark } from '@/components/Logo';
 import { login } from '@/lib/queries';
 
 export default function LoginPage() {
@@ -28,16 +29,14 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-sm">
-      <div className="mb-6 flex items-center gap-2.5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-primary text-sm font-bold text-white">
-          M
-        </span>
-        <span className="text-lg font-semibold tracking-tight text-brand-ink">Manifest</span>
+      <div className="mb-6 flex justify-center">
+        <Wordmark />
       </div>
-      <h1 className="text-xl font-semibold text-brand-ink">Sign in</h1>
-      <p className="mt-1 text-sm text-brand-muted">Welcome back to fulfillment operations.</p>
+      <div className="rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-sm">
+        <h1 className="text-xl font-semibold tracking-tight text-brand-ink">Sign in</h1>
+        <p className="mt-1 text-sm text-brand-muted">Sign in to the ops console.</p>
 
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        <form onSubmit={onSubmit} className="mt-6 space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-brand-ink">
             Email
@@ -78,14 +77,15 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <p className="mt-4 text-sm text-brand-muted">
-        No account?{' '}
-        <Link href="/register" className="text-brand-ink hover:text-brand-primary">
-          Create one
-        </Link>
-      </p>
-      <p className="mt-6 rounded-md border border-brand-border bg-brand-surface px-3 py-2 text-xs text-brand-muted">
-        Demo login — <span className="font-mono text-brand-ink">demo@manifest.dev</span> /{' '}
+        <p className="mt-5 text-sm text-brand-muted">
+          No account?{' '}
+          <Link href="/register" className="text-brand-ink hover:text-brand-primary">
+            Create one
+          </Link>
+        </p>
+      </div>
+      <p className="mt-4 rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-center text-xs text-brand-muted">
+        Demo — <span className="font-mono text-brand-ink">demo@manifest.dev</span> /{' '}
         <span className="font-mono text-brand-ink">demo12345</span>
       </p>
     </div>
