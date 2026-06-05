@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { GeistMono } from 'geist/font/mono';
+import { GeistSans } from 'geist/font/sans';
 import { Sidebar } from '@/components/Sidebar';
 import { Topbar } from '@/components/Topbar';
 import { fetchMe } from '@/lib/queries.server';
 import './globals.css';
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
   title: 'Manifest — Fulfillment Operations',
@@ -16,7 +15,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const user = await fetchMe();
 
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body className="min-h-screen bg-brand-bg font-sans text-brand-ink antialiased">
         {user ? (
           <div className="flex min-h-screen">
