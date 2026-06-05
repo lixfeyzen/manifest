@@ -55,8 +55,11 @@ export default function NewOrderPage() {
         className="space-y-5 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
       >
         <div>
-          <label className="block text-sm font-medium text-slate-700">Customer email</label>
+          <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+            Customer email
+          </label>
           <input
+            id="email"
             type="email"
             required
             value={email}
@@ -66,8 +69,11 @@ export default function NewOrderPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Product</label>
+          <label htmlFor="product" className="block text-sm font-medium text-slate-700">
+            Product
+          </label>
           <select
+            id="product"
             value={sku}
             onChange={(e) => setSku(e.target.value)}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
@@ -81,8 +87,11 @@ export default function NewOrderPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-700">Quantity</label>
+          <label htmlFor="quantity" className="block text-sm font-medium text-slate-700">
+            Quantity
+          </label>
           <input
+            id="quantity"
             type="number"
             min={1}
             required
