@@ -4,7 +4,7 @@ import { AutoRefresh } from '@/components/AutoRefresh';
 import { MetricCard } from '@/components/MetricCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { formatCurrency, formatRelative, shortId } from '@/lib/format';
-import { fetchDashboardMetrics, fetchOrders } from '@/lib/queries';
+import { fetchDashboardMetrics, fetchOrders } from '@/lib/queries.server';
 
 export const dynamic = 'force-dynamic';
 

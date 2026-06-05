@@ -1,43 +1,9 @@
 import { API_URL, graphqlRequest } from './graphql';
-import type { DashboardMetrics, InventoryItem, Order, OrderStatus } from './types';
+import type { InventoryItem, Order, OrderStatus } from './types';
 
-const ORDER_FIELDS = `
-  id
-  customerEmail
-  totalAmount
-  status
-  createdAt
-  updatedAt
-  items { id sku name quantity unitPrice }
-  payment { id amount status providerEventId createdAt }
-  invoice { id invoiceNumber amount status createdAt }
-  fulfillmentJobs { id status attempts lastError bullJobId createdAt updatedAt }
-  events { id type payload correlationId createdAt }
-  lastEvent { id type createdAt }
-`;
-
-export async function fetchDashboardMetrics(): Promise<DashboardMetrics> {
-  const data = await graphqlRequest<{ dashboardMetrics: DashboardMetrics }>(`
-    query { dashboardMetrics { totalOrders pendingOrders paidOrders fulfilledOrders failedJobs } }
-  `);
-  return data.dashboardMetrics;
-}
-
-export async function fetchOrders(status?: OrderStatus): Promise<Order[]> {
-  const data = await graphqlRequest<{ orders: Order[] }>(
-    `query Orders($status: OrderStatus) { orders(status: $status) { ${ORDER_FIELDS} } }`,
-    { status },
-  );
-  return data.orders;
-}
-
-export async function fetchOrder(id: string): Promise<Order | null> {
-  const data = await graphqlRequest<{ order: Order | null }>(
-    `query Order($id: ID!) { order(id: $id) { ${ORDER_FIELDS} } }`,
-    { id },
-  );
-  return data.order;
-}
+// Client-side data functions. In the browser, the session cookie is sent
+// automatically (graphqlRequest uses credentials:'include'). Server Components
+// must use ./queries.server instead, which forwards the cookie explicitly.
 
 export async function fetchInventory(): Promise<InventoryItem[]> {
   const data = await graphqlRequest<{ inventoryItems: InventoryItem[] }>(`
@@ -74,11 +40,8 @@ export async function retryFulfillment(orderId: string): Promise<RetryResult> {
 }
 
 /**
- * Send a simulated payment webhook to the REST endpoint.
- *
- * The idempotencyKey is deterministic (`payment_<orderId>_demo`) so that the
- * "Simulate Duplicate" button can re-send the exact same event and demonstrate
- * idempotent handling.
+ * Send a simulated payment webhook to the (public) REST endpoint. The
+ * idempotencyKey is deterministic so "Simulate Duplicate" re-sends the same event.
  */
 export async function sendPaymentWebhook(params: {
   orderId: string;
@@ -99,4 +62,36 @@ export async function sendPaymentWebhook(params: {
     }),
   });
   return (await res.json()) as { status: string; message: string };
+}
+
+// --- Auth (REST) ------------------------------------------------------------
+
+export interface AuthUser {
+  id: string;
+  email: string;
+}
+
+async function authRequest(
+  path: '/auth/login' | '/auth/register',
+  body: { email: string; password: string },
+): Promise<AuthUser> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    credentials: 'include',
+  });
+  const json = (await res.json().catch(() => ({}))) as { user?: AuthUser; error?: string };
+  if (!res.ok) {
+    throw new Error(json.error ?? 'Authentication failed');
+  }
+  return json.user!;
+}
+
+export const login = (email: string, password: string) => authRequest('/auth/login', { email, password });
+export const register = (email: string, password: string) =>
+  authRequest('/auth/register', { email, password });
+
+export async function logout(): Promise<void> {
+  await fetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
 }

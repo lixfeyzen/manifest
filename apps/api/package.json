@@ -13,10 +13,12 @@
     "test": "dotenv -e ../../.env.test -- vitest run"
   },
   "dependencies": {
+    "@fastify/cookie": "^11.0.1",
     "@fastify/cors": "^10.0.1",
     "@manifest/db": "workspace:*",
     "@manifest/domain": "workspace:*",
     "@manifest/shared": "workspace:*",
+    "bcryptjs": "^2.4.3",
     "bullmq": "^5.19.0",
     "fastify": "^5.0.0",
     "graphql": "^16.9.0",
@@ -26,6 +28,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "dotenv-cli": "^7.4.2",
     "pino-pretty": "^11.2.2",
     "tsx": "^4.19.1",

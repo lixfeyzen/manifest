@@ -3,10 +3,11 @@ import type { FastifyInstance } from 'fastify';
 import { prisma } from '@manifest/db';
 import { buildServer } from '../src/server.js';
 import { fulfillmentQueue, redisConnection } from '../src/queue.js';
-import { resetAndSeed } from './helpers.js';
+import { authCookie, resetAndSeed } from './helpers.js';
 
 describe('createOrder (GraphQL integration)', () => {
   let app: FastifyInstance;
+  let cookie: string;
 
   beforeAll(async () => {
     app = await buildServer({ logger: false });
@@ -22,13 +23,15 @@ describe('createOrder (GraphQL integration)', () => {
 
   beforeEach(async () => {
     await resetAndSeed();
+    // GraphQL now requires a session; register a fresh user and reuse its cookie.
+    cookie = await authCookie(app);
   });
 
   async function graphql(query: string, variables?: Record<string, unknown>) {
     const res = await app.inject({
       method: 'POST',
       url: '/graphql',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', cookie },
       payload: JSON.stringify({ query, variables }),
     });
     return res.json();

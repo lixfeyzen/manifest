@@ -5,12 +5,24 @@ import { z } from 'zod';
  * malformed, the process exits immediately with a clear message instead of
  * failing mysteriously later when the value is first used.
  */
-const envSchema = z.object({
-  DATABASE_URL: z.string().min(1),
-  REDIS_URL: z.string().min(1),
-  API_PORT: z.coerce.number().int().positive().default(4000),
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-});
+const DEV_SESSION_SECRET = 'dev-insecure-session-secret-change-me-please';
+
+const envSchema = z
+  .object({
+    DATABASE_URL: z.string().min(1),
+    REDIS_URL: z.string().min(1),
+    API_PORT: z.coerce.number().int().positive().default(4000),
+    NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+    // Secret used to sign the session cookie.
+    SESSION_SECRET: z.string().min(16).default(DEV_SESSION_SECRET),
+    // Exact browser origin allowed to send credentialed requests (CORS).
+    WEB_ORIGIN: z.string().url().default('http://localhost:3001'),
+  })
+  // Never allow the throwaway dev secret in production.
+  .refine((e) => e.NODE_ENV !== 'production' || e.SESSION_SECRET !== DEV_SESSION_SECRET, {
+    message: 'SESSION_SECRET must be set to a strong value in production',
+    path: ['SESSION_SECRET'],
+  });
 
 const parsed = envSchema.safeParse(process.env);
 

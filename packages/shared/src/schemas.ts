@@ -30,6 +30,21 @@ export const paymentWebhookSchema = z.object({
 });
 export type PaymentWebhookInput = z.infer<typeof paymentWebhookSchema>;
 
+/** New-account registration input. */
+export const registerSchema = z.object({
+  email: z.string().email('a valid email is required'),
+  // bcrypt only uses the first 72 bytes, so cap length to avoid silent truncation.
+  password: z.string().min(8, 'password must be at least 8 characters').max(72),
+});
+export type RegisterInput = z.infer<typeof registerSchema>;
+
+/** Login input. */
+export const loginSchema = z.object({
+  email: z.string().email('a valid email is required'),
+  password: z.string().min(1, 'password is required').max(72),
+});
+export type LoginInput = z.infer<typeof loginSchema>;
+
 /** Fulfillment job payload enqueued onto BullMQ. */
 export const fulfillmentJobDataSchema = z.object({
   orderId: z.string().min(1),

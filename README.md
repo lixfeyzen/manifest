@@ -125,9 +125,19 @@ pnpm dev
 
 ---
 
+## Authentication
+
+The dashboard sits behind a staff login (email + password, hashed with bcrypt;
+an httpOnly **signed cookie session** stored in the database). The GraphQL API is
+protected; the payment webhook stays public (a provider can't log in). See
+[ADR 004](docs/adr/004-auth.md).
+
+- **Demo account** (seeded in dev): `demo@manifest.dev` / `demo12345`
+- Or create your own via **Register**.
+
 ## Demo flow
 
-1. Open the dashboard at http://localhost:3000.
+1. Open http://localhost:3000 and **sign in** (demo account above, or register).
 2. Go to **Orders → New**, create an order using a seeded SKU.
 3. Open the order detail page — status is `PENDING`.
 4. Click **Simulate Payment Webhook** → order becomes `PAID`, a fulfillment job is queued.
@@ -184,7 +194,7 @@ See [docs/testing-strategy.md](docs/testing-strategy.md).
 ## Known limitations
 
 - No real payment provider — payment is simulated via the REST webhook endpoint.
-- No authentication / authorization — out of scope for this portfolio.
+- Auth is intentionally minimal: email/password + cookie session, no RBAC, OAuth, email verification, or password reset.
 - Invoices are records only; no PDF generation or email delivery.
 - Single worker process; no horizontal scaling concerns addressed.
 

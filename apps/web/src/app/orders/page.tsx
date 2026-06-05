@@ -3,7 +3,7 @@ import { ApiError } from '@/components/ApiError';
 import { AutoRefresh } from '@/components/AutoRefresh';
 import { StatusBadge } from '@/components/StatusBadge';
 import { formatCurrency, formatRelative, shortId } from '@/lib/format';
-import { fetchOrders } from '@/lib/queries';
+import { fetchOrders } from '@/lib/queries.server';
 import type { OrderStatus } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';

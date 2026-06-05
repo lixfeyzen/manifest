@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Sidebar } from '@/components/Sidebar';
 import { Topbar } from '@/components/Topbar';
+import { fetchMe } from '@/lib/queries.server';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -11,17 +12,23 @@ export const metadata: Metadata = {
   description: 'Track every order from payment webhook to fulfillment.',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const user = await fetchMe();
+
   return (
     <html lang="en" className={inter.variable}>
       <body className="min-h-screen bg-brand-bg font-sans text-brand-ink antialiased">
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <Topbar />
-            <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8 lg:px-10">{children}</main>
+        {user ? (
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <Topbar email={user.email} />
+              <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8 lg:px-10">{children}</main>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="grid min-h-screen place-items-center px-4">{children}</div>
+        )}
       </body>
     </html>
   );

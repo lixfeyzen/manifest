@@ -2,19 +2,27 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 /**
- * Minimal GraphQL client. Works in both server and client components (fetch is
- * universal). Always fetches fresh data — this is an operations dashboard, so we
- * never want a stale cache hiding the latest order state.
+ * Minimal GraphQL client, usable from both client and server components.
+ *
+ * - In the browser, `credentials: 'include'` sends the session cookie.
+ * - In a Server Component, the browser cookie is NOT auto-attached, so callers
+ *   pass `cookieHeader` (read from next/headers) to forward the session. This
+ *   file stays free of `next/headers` so it remains safe to import on the client.
  */
 export async function graphqlRequest<T>(
   query: string,
   variables?: Record<string, unknown>,
+  cookieHeader?: string,
 ): Promise<T> {
   const res = await fetch(`${API_URL}/graphql`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+    },
     body: JSON.stringify({ query, variables }),
     cache: 'no-store',
+    credentials: 'include',
   });
 
   if (!res.ok) {
@@ -30,3 +38,23 @@ export async function graphqlRequest<T>(
   }
   return json.data;
 }
+
+/** GraphQL field selection shared by the order queries (client + server). */
+export const ORDER_FIELDS = `
+  id
+  customerEmail
+  totalAmount
+  status
+  createdAt
+  updatedAt
+  items { id sku name quantity unitPrice }
+  payment { id amount status providerEventId createdAt }
+  invoice { id invoiceNumber amount status createdAt }
+  fulfillmentJobs { id status attempts lastError bullJobId createdAt updatedAt }
+  events { id type payload correlationId createdAt }
+  lastEvent { id type createdAt }
+`;
+
+export const ORDERS_QUERY = `query Orders($status: OrderStatus) { orders(status: $status) { ${ORDER_FIELDS} } }`;
+export const ORDER_QUERY = `query Order($id: ID!) { order(id: $id) { ${ORDER_FIELDS} } }`;
+export const DASHBOARD_QUERY = `query { dashboardMetrics { totalOrders pendingOrders paidOrders fulfilledOrders failedJobs } }`;

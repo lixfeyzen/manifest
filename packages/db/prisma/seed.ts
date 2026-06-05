@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -23,6 +24,19 @@ async function main(): Promise<void> {
   }
   // eslint-disable-next-line no-console
   console.log(`Seeded ${INVENTORY.length} inventory items.`);
+
+  // Demo login — for local/dev only, never in production.
+  if (process.env.NODE_ENV !== 'production') {
+    const email = 'demo@manifest.dev';
+    const passwordHash = await bcrypt.hash('demo12345', 12);
+    await prisma.user.upsert({
+      where: { email },
+      update: { passwordHash },
+      create: { email, passwordHash },
+    });
+    // eslint-disable-next-line no-console
+    console.log(`Seeded demo user: ${email} / demo12345`);
+  }
 }
 
 main()
