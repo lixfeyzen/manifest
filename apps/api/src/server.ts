@@ -10,8 +10,10 @@ import { webhookRoutes } from './rest/webhook.js';
  * Returning the instance (instead of listening here) keeps it easy to spin up in
  * integration tests via `app.inject()` without binding a port.
  */
-export async function buildServer(): Promise<FastifyInstance> {
-  const app = Fastify({ logger: true });
+export async function buildServer(
+  opts: { logger?: boolean } = {},
+): Promise<FastifyInstance> {
+  const app = Fastify({ logger: opts.logger ?? true });
 
   // The frontend (localhost:3000) calls this API directly from the browser.
   await app.register(cors, { origin: true });

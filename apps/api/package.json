@@ -10,7 +10,7 @@
     "start": "node dist/index.js",
     "lint": "echo \"(no lint configured)\"",
     "typecheck": "tsc --noEmit",
-    "test": "dotenv -e ../../.env -- vitest run"
+    "test": "dotenv -e ../../.env.test -- vitest run"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",

@@ -19,6 +19,9 @@ export const graphqlPlugin: FastifyPluginAsync = async (app) => {
     // GraphiQL explorer in development only.
     graphiql: env.NODE_ENV === 'development',
     landingPage: false,
+    // Mask error details in production for safety; surface real messages in
+    // development/test so business errors (e.g. "Unknown SKU") are visible.
+    maskedErrors: env.NODE_ENV === 'production',
   });
 
   // Pass bodies through untouched so Yoga can parse them from the raw stream.
