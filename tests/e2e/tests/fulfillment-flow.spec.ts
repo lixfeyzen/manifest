@@ -10,7 +10,7 @@ test('create → pay → fulfilled → duplicate ignored', async ({ page }) => {
   await page.goto('/orders/new');
   await expect(page.getByRole('heading', { name: 'New order' })).toBeVisible();
 
-  await page.getByLabel('Customer email').fill('e2e@example.com');
+  await page.getByLabel('Customer email').fill('noah.carter@gmail.com');
   await page.getByLabel('Product').selectOption('SKU-STICKER');
   await page.getByLabel('Quantity').fill('2');
   await page.getByRole('button', { name: 'Create order' }).click();

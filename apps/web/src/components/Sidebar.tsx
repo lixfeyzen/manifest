@@ -30,7 +30,7 @@ export function Sidebar() {
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-brand-border bg-brand-surface lg:flex">
       <div className="flex h-16 items-center border-b border-brand-border px-5">
-        <Wordmark subtitle="Fulfillment Ops" />
+        <Wordmark />
       </div>
 
       <nav className="flex-1 space-y-1 p-3">
@@ -56,10 +56,6 @@ export function Sidebar() {
           );
         })}
       </nav>
-
-      <div className="p-5">
-        <p className="text-[11px] leading-relaxed text-brand-muted">Event-driven fulfillment ops</p>
-      </div>
     </aside>
   );
 }
