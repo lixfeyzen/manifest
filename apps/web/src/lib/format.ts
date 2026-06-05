@@ -22,3 +22,21 @@ export function formatDateTime(iso: string): string {
 export function shortId(id: string): string {
   return id.slice(0, 8);
 }
+
+/**
+ * Human-relative time ("just now", "5m ago", "3h ago"). Computed at render time;
+ * pair it with the absolute time in a title attribute for precision on hover.
+ */
+export function formatRelative(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const s = Math.max(0, Math.round(diffMs / 1000));
+  if (s < 5) return 'just now';
+  if (s < 60) return `${s}s ago`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.round(h / 24);
+  if (d < 7) return `${d}d ago`;
+  return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+}

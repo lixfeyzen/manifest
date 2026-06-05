@@ -1,9 +1,17 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { AlertCircle, CheckCircle2, Info, Loader2, RefreshCw, Zap } from 'lucide-react';
+import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { retryFulfillment, sendPaymentWebhook } from '@/lib/queries';
 import type { OrderStatus } from '@/lib/types';
+
+type ToastKind = 'ok' | 'info' | 'err';
+interface Toast {
+  id: number;
+  kind: ToastKind;
+  text: string;
+}
 
 export function OrderActions({
   orderId,
@@ -17,24 +25,29 @@ export function OrderActions({
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
-  const [message, setMessage] = useState<{ kind: 'ok' | 'info' | 'err'; text: string } | null>(
-    null,
-  );
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const nextId = useRef(1);
 
-  // Refresh now, then again shortly after to catch the worker's async result.
+  function pushToast(kind: ToastKind, text: string) {
+    const id = nextId.current++;
+    setToasts((t) => [...t, { id, kind, text }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4500);
+  }
+
+  // Refresh now, then again shortly to catch the worker's async result.
   function refreshSoon() {
     startTransition(() => router.refresh());
     setTimeout(() => startTransition(() => router.refresh()), 1500);
   }
 
-  async function run(action: string, fn: () => Promise<{ kind: 'ok' | 'info' | 'err'; text: string }>) {
+  async function run(action: string, fn: () => Promise<{ kind: ToastKind; text: string }>) {
     setBusy(action);
-    setMessage(null);
     try {
-      setMessage(await fn());
+      const result = await fn();
+      pushToast(result.kind, result.text);
       refreshSoon();
     } catch (e) {
-      setMessage({ kind: 'err', text: e instanceof Error ? e.message : 'Action failed' });
+      pushToast('err', e instanceof Error ? e.message : 'Action failed');
     } finally {
       setBusy(null);
     }
@@ -42,71 +55,84 @@ export function OrderActions({
 
   const canPay = status === 'PENDING';
   const canRetry = status === 'FAILED';
+  const isBusy = busy !== null;
 
   return (
-    <div className="rounded-xl border border-brand-border bg-brand-surface p-5 shadow-sm">
-      <div className="flex flex-wrap gap-3">
+    <>
+      <div className="flex flex-wrap items-center gap-2">
         <button
-          disabled={!canPay || busy !== null}
+          disabled={!canPay || isBusy}
           onClick={() =>
             run('pay', async () => {
               const res = await sendPaymentWebhook({ orderId, amount });
-              return { kind: 'ok', text: `Webhook ${res.status}: ${res.message}` };
+              return { kind: 'ok', text: `Webhook ${res.status} — ${res.message}` };
             })
           }
-          className="rounded-md bg-brand-primary px-3 py-2 text-sm font-medium text-white hover:bg-brand-primary-dark disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-3.5 py-2 text-sm font-medium text-white shadow-sm shadow-brand-primary/30 transition-colors hover:bg-brand-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
         >
-          {busy === 'pay' ? 'Sending…' : 'Simulate Payment Webhook'}
+          {busy === 'pay' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+          Simulate Payment Webhook
         </button>
 
         <button
-          disabled={canPay || busy !== null}
+          disabled={canPay || isBusy}
           onClick={() =>
             run('dup', async () => {
               const res = await sendPaymentWebhook({ orderId, amount, duplicate: true });
               return {
                 kind: res.status === 'ignored' ? 'info' : 'ok',
-                text: `Duplicate webhook → ${res.status}: ${res.message}`,
+                text: `Duplicate webhook ${res.status} — ${res.message}`,
               };
             })
           }
-          className="rounded-md border border-brand-border bg-brand-surface px-3 py-2 text-sm font-medium text-brand-ink hover:bg-brand-bg disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-2 rounded-lg border border-brand-border bg-brand-surface px-3.5 py-2 text-sm font-medium text-brand-ink transition-colors hover:bg-brand-bg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {busy === 'dup' ? 'Sending…' : 'Simulate Duplicate Webhook'}
+          {busy === 'dup' ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+          Simulate Duplicate Webhook
         </button>
 
-        <button
-          disabled={!canRetry || busy !== null}
-          onClick={() =>
-            run('retry', async () => {
-              const res = await retryFulfillment(orderId);
-              return { kind: res.ok ? 'ok' : 'err', text: res.message };
-            })
-          }
-          className="rounded-md bg-amber-500 px-3 py-2 text-sm font-medium text-white hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {busy === 'retry' ? 'Retrying…' : 'Retry Fulfillment'}
-        </button>
+        {canRetry && (
+          <button
+            disabled={isBusy}
+            onClick={() =>
+              run('retry', async () => {
+                const res = await retryFulfillment(orderId);
+                return { kind: res.ok ? 'ok' : 'err', text: res.message };
+              })
+            }
+            className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3.5 py-2 text-sm font-medium text-amber-800 transition-colors hover:bg-amber-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {busy === 'retry' ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            Retry Fulfillment
+          </button>
+        )}
       </div>
 
-      {message && (
-        <p
-          className={`mt-3 rounded-md px-3 py-2 text-sm ring-1 ring-inset ${
-            message.kind === 'ok'
-              ? 'bg-emerald-50 text-emerald-700 ring-emerald-200'
-              : message.kind === 'info'
-                ? 'bg-amber-50 text-amber-700 ring-amber-200'
-                : 'bg-red-50 text-red-700 ring-red-200'
-          }`}
-        >
-          {message.text}
-        </p>
-      )}
-
-      <p className="mt-3 text-xs text-brand-muted">
-        Tip: pay first, then use <strong>Simulate Duplicate</strong> to see the same idempotency key
-        safely ignored — no second payment or invoice.
-      </p>
-    </div>
+      {/* Toasts */}
+      <div className="pointer-events-none fixed bottom-5 right-5 z-50 flex w-80 flex-col gap-2">
+        {toasts.map((t) => {
+          const Icon = t.kind === 'ok' ? CheckCircle2 : t.kind === 'info' ? Info : AlertCircle;
+          const color =
+            t.kind === 'ok'
+              ? 'text-emerald-600'
+              : t.kind === 'info'
+                ? 'text-brand-primary'
+                : 'text-red-500';
+          return (
+            <div
+              key={t.id}
+              className="pointer-events-auto flex items-start gap-2.5 rounded-lg border border-brand-border bg-brand-surface p-3 shadow-lg shadow-brand-ink/5"
+            >
+              <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${color}`} />
+              <p className="text-sm text-brand-ink">{t.text}</p>
+            </div>
+          );
+        })}
+      </div>
+    </>
   );
 }
