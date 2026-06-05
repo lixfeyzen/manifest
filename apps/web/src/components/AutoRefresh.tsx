@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Tooltip } from './Tooltip';
 
 /**
  * Periodically re-fetches the current Server Component tree via router.refresh(),
@@ -20,9 +21,11 @@ export function AutoRefresh({ intervalMs = 3000 }: { intervalMs?: number }) {
   }, [router, intervalMs]);
 
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-brand-muted">
-      <span className="mf-pulse h-1.5 w-1.5 rounded-full bg-emerald-500" />
-      Live
-    </span>
+    <Tooltip label={`Auto-refreshing every ${Math.round(intervalMs / 1000)}s`}>
+      <span className="inline-flex items-center gap-1.5 text-xs text-brand-muted">
+        <span className="mf-pulse h-1.5 w-1.5 rounded-full bg-emerald-500" />
+        Live
+      </span>
+    </Tooltip>
   );
 }
