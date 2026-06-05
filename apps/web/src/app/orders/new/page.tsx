@@ -43,8 +43,8 @@ export default function NewOrderPage() {
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900">New order</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-2xl font-semibold text-brand-ink">New order</h1>
+        <p className="mt-1 text-sm text-brand-muted">
           Create an order from seeded inventory. It starts as <strong>PENDING</strong> until a
           payment webhook arrives.
         </p>
@@ -55,7 +55,7 @@ export default function NewOrderPage() {
         className="space-y-5 rounded-xl border border-brand-border bg-brand-surface p-6 shadow-sm"
       >
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="email" className="block text-sm font-medium text-brand-ink">
             Customer email
           </label>
           <input
@@ -64,19 +64,19 @@ export default function NewOrderPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+            className="mt-1 w-full rounded-md border border-brand-border px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
           />
         </div>
 
         <div>
-          <label htmlFor="product" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="product" className="block text-sm font-medium text-brand-ink">
             Product
           </label>
           <select
             id="product"
             value={sku}
             onChange={(e) => setSku(e.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+            className="mt-1 w-full rounded-md border border-brand-border px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
           >
             {inventory.map((item) => (
               <option key={item.sku} value={item.sku}>
@@ -87,7 +87,7 @@ export default function NewOrderPage() {
         </div>
 
         <div>
-          <label htmlFor="quantity" className="block text-sm font-medium text-slate-700">
+          <label htmlFor="quantity" className="block text-sm font-medium text-brand-ink">
             Quantity
           </label>
           <input
@@ -97,13 +97,13 @@ export default function NewOrderPage() {
             required
             value={quantity}
             onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-            className="mt-1 w-32 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+            className="mt-1 w-32 rounded-md border border-brand-border px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
           />
         </div>
 
         <div className="flex items-center justify-between border-t border-brand-border pt-4">
-          <span className="text-sm text-slate-500">Total</span>
-          <span className="text-lg font-semibold tabular-nums text-slate-900">
+          <span className="text-sm text-brand-muted">Total</span>
+          <span className="text-lg font-semibold tabular-nums text-brand-ink">
             {formatCurrency(total)}
           </span>
         </div>

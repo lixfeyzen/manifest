@@ -70,7 +70,7 @@ export function OrderActions({
               };
             })
           }
-          className="rounded-md border border-slate-300 bg-brand-surface px-3 py-2 text-sm font-medium text-slate-700 hover:bg-brand-bg disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-md border border-brand-border bg-brand-surface px-3 py-2 text-sm font-medium text-brand-ink hover:bg-brand-bg disabled:cursor-not-allowed disabled:opacity-40"
         >
           {busy === 'dup' ? 'Sending…' : 'Simulate Duplicate Webhook'}
         </button>
@@ -103,7 +103,7 @@ export function OrderActions({
         </p>
       )}
 
-      <p className="mt-3 text-xs text-slate-400">
+      <p className="mt-3 text-xs text-brand-muted">
         Tip: pay first, then use <strong>Simulate Duplicate</strong> to see the same idempotency key
         safely ignored — no second payment or invoice.
       </p>

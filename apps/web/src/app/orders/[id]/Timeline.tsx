@@ -3,9 +3,9 @@ import type { OrderEvent } from '@/lib/types';
 
 // Color hint per event type so the timeline is scannable at a glance.
 const DOT: Record<string, string> = {
-  'order.created': 'bg-slate-400',
-  'payment.webhook.received': 'bg-blue-400',
-  'payment.succeeded': 'bg-blue-500',
+  'order.created': 'bg-brand-muted',
+  'payment.webhook.received': 'bg-violet-400',
+  'payment.succeeded': 'bg-brand-primary',
   'duplicate_event.ignored': 'bg-amber-400',
   'fulfillment.queued': 'bg-indigo-400',
   'fulfillment.started': 'bg-indigo-500',
@@ -18,7 +18,7 @@ const DOT: Record<string, string> = {
 
 export function Timeline({ events }: { events: OrderEvent[] }) {
   if (events.length === 0) {
-    return <p className="text-sm text-slate-400">No events yet.</p>;
+    return <p className="text-sm text-brand-muted">No events yet.</p>;
   }
   return (
     <ol className="relative space-y-4 border-l border-brand-border pl-4">
@@ -26,11 +26,11 @@ export function Timeline({ events }: { events: OrderEvent[] }) {
         <li key={event.id} className="relative">
           <span
             className={`absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full ring-2 ring-white ${
-              DOT[event.type] ?? 'bg-slate-300'
+              DOT[event.type] ?? 'bg-brand-chalice'
             }`}
           />
-          <p className="font-mono text-sm text-slate-800">{event.type}</p>
-          <p className="text-xs text-slate-400">{formatDateTime(event.createdAt)}</p>
+          <p className="font-mono text-sm text-brand-ink">{event.type}</p>
+          <p className="text-xs text-brand-muted">{formatDateTime(event.createdAt)}</p>
         </li>
       ))}
     </ol>
