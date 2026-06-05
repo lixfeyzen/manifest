@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ApiError } from '@/components/ApiError';
+import { AutoRefresh } from '@/components/AutoRefresh';
 import { JobStatusBadge, StatusBadge } from '@/components/StatusBadge';
 import { formatCurrency, formatDateTime, shortId } from '@/lib/format';
 import { fetchOrder } from '@/lib/queries';
@@ -24,12 +25,15 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 text-sm text-slate-500">
-        <Link href="/orders" className="hover:text-slate-700">
-          Orders
-        </Link>
-        <span>/</span>
-        <span className="font-mono text-slate-700">{shortId(order.id)}</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm text-slate-500">
+          <Link href="/orders" className="hover:text-slate-700">
+            Orders
+          </Link>
+          <span>/</span>
+          <span className="font-mono text-slate-700">{shortId(order.id)}</span>
+        </div>
+        <AutoRefresh />
       </div>
 
       <div className="flex flex-wrap items-start justify-between gap-4">

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AutoRefresh } from '@/components/AutoRefresh';
 import { MetricCard } from '@/components/MetricCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { formatCurrency, formatDateTime, shortId } from '@/lib/format';
@@ -14,11 +15,14 @@ export default async function DashboardPage() {
 
     return (
       <div className="space-y-8">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Track every order from payment webhook to fulfillment.
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Track every order from payment webhook to fulfillment.
+            </p>
+          </div>
+          <AutoRefresh />
         </div>
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
