@@ -1,0 +1,161 @@
+// Manifest database schema.
+// Enum string values mirror the constants in packages/shared/src/constants.ts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FULFILLING
+  FULFILLED
+  FAILED
+}
+
+enum PaymentStatus {
+  SUCCEEDED
+  FAILED
+}
+
+enum InvoiceStatus {
+  ISSUED
+}
+
+enum FulfillmentJobStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ProcessedEventStatus {
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  customerEmail String
+  totalAmount   Int
+  status        OrderStatus @default(PENDING)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  items           OrderItem[]
+  payment         Payment?
+  invoice         Invoice?
+  events          OrderEvent[]
+  fulfillmentJobs FulfillmentJob[]
+  reservations    InventoryReservation[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  sku       String
+  name      String
+  quantity  Int
+  unitPrice Int
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model InventoryItem {
+  id        String   @id @default(uuid())
+  sku       String   @unique
+  name      String
+  stock     Int
+  unitPrice Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model InventoryReservation {
+  id        String   @id @default(uuid())
+  orderId   String
+  sku       String
+  quantity  Int
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // Guarantees one reservation per order+sku so retries cannot double-deduct stock.
+  @@unique([orderId, sku])
+  @@index([orderId])
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  orderId         String        @unique
+  providerEventId String        @unique
+  idempotencyKey  String        @unique
+  amount          Int
+  status          PaymentStatus
+  rawPayload      Json
+  createdAt       DateTime      @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id            String        @id @default(uuid())
+  orderId       String        @unique
+  invoiceNumber String        @unique
+  amount        Int
+  status        InvoiceStatus @default(ISSUED)
+  createdAt     DateTime      @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model OrderEvent {
+  id            String   @id @default(uuid())
+  orderId       String
+  type          String
+  payload       Json
+  correlationId String
+  createdAt     DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([correlationId])
+}
+
+model ProcessedEvent {
+  id              String               @id @default(uuid())
+  idempotencyKey  String               @unique
+  providerEventId String               @unique
+  status          ProcessedEventStatus
+  result          Json?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+}
+
+model FulfillmentJob {
+  id        String               @id @default(uuid())
+  orderId   String
+  bullJobId String?              @unique
+  status    FulfillmentJobStatus @default(QUEUED)
+  attempts  Int                  @default(0)
+  lastError String?
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
