@@ -37,7 +37,7 @@ const JOB_TONE: Record<FulfillmentJobStatus, Tone> = {
 export function StatusLabel({ label, tone }: { label: string; tone: Tone }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${PILL[tone]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors duration-150 ease-[var(--ease-std)] ${PILL[tone]}`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${DOT[tone]}`} />
       <span>{label}</span>

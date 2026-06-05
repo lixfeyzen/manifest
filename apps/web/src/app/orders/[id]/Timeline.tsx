@@ -1,3 +1,5 @@
+'use client';
+
 import { formatDateTime, formatRelative } from '@/lib/format';
 import type { OrderEvent } from '@/lib/types';
 
@@ -18,7 +20,11 @@ export function Timeline({ events }: { events: OrderEvent[] }) {
   return (
     <ol>
       {events.map((event, i) => (
-        <li key={event.id} className="relative flex gap-3 pb-4 last:pb-0">
+        <li
+          key={event.id}
+          className="mf-rise relative flex gap-3 pb-4 last:pb-0"
+          style={{ animationDelay: `${Math.min(i, 6) * 40}ms` }}
+        >
           {i < events.length - 1 && (
             <span className="absolute left-[4.5px] top-3.5 h-full w-px bg-brand-border" />
           )}

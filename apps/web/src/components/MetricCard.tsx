@@ -20,7 +20,7 @@ export function MetricCard({
   hint?: { text: string; tone: Tone; dir?: 'up' | 'down' };
 }) {
   return (
-    <div className="rounded-xl border border-brand-border bg-brand-surface p-5 shadow-sm">
+    <div className="rounded-xl border border-brand-border bg-brand-surface p-5 shadow-sm transition-[transform,box-shadow] duration-150 ease-[var(--ease-out)] hover:-translate-y-px hover:shadow-md">
       <p className="text-sm font-medium text-brand-muted">{label}</p>
       <p className="mt-2 text-3xl font-semibold tabular-nums tracking-tight text-brand-ink">
         {value}

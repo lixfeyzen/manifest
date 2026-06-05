@@ -11,6 +11,7 @@ interface Toast {
   id: number;
   kind: ToastKind;
   text: string;
+  leaving?: boolean;
 }
 
 export function OrderActions({
@@ -31,7 +32,12 @@ export function OrderActions({
   function pushToast(kind: ToastKind, text: string) {
     const id = nextId.current++;
     setToasts((t) => [...t, { id, kind, text }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4500);
+    // Keep the toast fully readable for 4.5s (E2E asserts "ignored"/"FULFILLED"),
+    // then animate out and unmount.
+    setTimeout(() => {
+      setToasts((t) => t.map((x) => (x.id === id ? { ...x, leaving: true } : x)));
+      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 160);
+    }, 4500);
   }
 
   // Refresh now, then again shortly to catch the worker's async result.
@@ -68,7 +74,7 @@ export function OrderActions({
               return { kind: 'ok', text: `Webhook ${res.status} — ${res.message}` };
             })
           }
-          className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-3.5 py-2 text-sm font-medium transition active:scale-[0.98] text-white hover:bg-brand-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-40"
         >
           {busy === 'pay' ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           Simulate Payment Webhook
@@ -85,7 +91,7 @@ export function OrderActions({
               };
             })
           }
-          className="inline-flex items-center gap-2 rounded-lg border border-brand-border bg-brand-surface px-3.5 py-2 text-sm font-medium text-brand-ink transition-colors hover:bg-brand-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-2 rounded-lg border border-brand-border bg-brand-surface px-3.5 py-2 text-sm font-medium transition active:scale-[0.98] text-brand-ink hover:bg-brand-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-40"
         >
           {busy === 'dup' ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           Simulate Duplicate Webhook
@@ -100,7 +106,7 @@ export function OrderActions({
                 return { kind: res.ok ? 'ok' : 'err', text: res.message };
               })
             }
-            className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-sm font-medium transition active:scale-[0.98] text-amber-700 hover:bg-amber-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {busy === 'retry' ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -125,7 +131,11 @@ export function OrderActions({
           return (
             <div
               key={t.id}
-              className="pointer-events-auto flex items-start gap-2.5 rounded-lg border border-brand-border bg-brand-surface p-3 shadow-md"
+              className={`pointer-events-auto flex items-start gap-2.5 rounded-lg border border-brand-border bg-brand-surface p-3 shadow-md ${
+                t.leaving
+                  ? 'translate-y-1 opacity-0 transition-all duration-150 ease-[var(--ease-std)]'
+                  : 'mf-toast-in'
+              }`}
             >
               <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${color}`} />
               <p className="text-sm text-brand-ink">{t.text}</p>
