@@ -2,17 +2,17 @@ import type { FulfillmentJobStatus, OrderStatus } from '@/lib/types';
 
 const ORDER_STYLES: Record<OrderStatus, string> = {
   PENDING: 'bg-brand-bg text-brand-muted ring-brand-border',
-  PAID: 'bg-brand-primary-soft text-brand-primary-dark ring-brand-primary/20',
-  FULFILLING: 'bg-amber-50 text-amber-700 ring-amber-200',
-  FULFILLED: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  FAILED: 'bg-red-50 text-red-600 ring-red-200',
+  PAID: 'bg-brand-primary-soft text-brand-primary ring-brand-primary/30',
+  FULFILLING: 'bg-amber-500/10 text-amber-300 ring-amber-500/20',
+  FULFILLED: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20',
+  FAILED: 'bg-red-500/10 text-red-400 ring-red-500/20',
 };
 
 const JOB_STYLES: Record<FulfillmentJobStatus, string> = {
   QUEUED: 'bg-brand-bg text-brand-muted ring-brand-border',
-  PROCESSING: 'bg-amber-50 text-amber-700 ring-amber-200',
-  COMPLETED: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  FAILED: 'bg-red-50 text-red-600 ring-red-200',
+  PROCESSING: 'bg-amber-500/10 text-amber-300 ring-amber-500/20',
+  COMPLETED: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20',
+  FAILED: 'bg-red-500/10 text-red-400 ring-red-500/20',
 };
 
 export function StatusBadge({ status }: { status: OrderStatus }) {

@@ -8,17 +8,18 @@ const config: Config = {
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
       },
       colors: {
-        // Palette: "Subscription Pricing" — purple accent on light lavender.
+        // Dark "infra console" theme — violet accent on near-black.
         brand: {
-          bg: '#F8F6FC', // Walkie Chalkie — app background
-          surface: '#FFFFFF', // cards
-          border: '#E4E0EC', // Homeopathic Lavender — hairline borders
-          chalice: '#CCCAD2',
-          muted: '#8E8A9C', // Gentle Grape — secondary text
-          ink: '#353148', // Deep Velvet — primary text / dark elements
-          primary: '#8C60F3', // Purple Anemone — primary accent
-          'primary-dark': '#7747E6',
-          'primary-soft': '#F1EAFE', // light purple tint for badges/hover
+          bg: '#0B0C10', // page background (near-black)
+          surface: '#15161B', // panels / cards
+          'surface-2': '#1C1E25', // hover / raised
+          border: '#262833', // hairline borders
+          chalice: '#3A3D4A', // neutral dots / dividers accent
+          muted: '#9499A6', // secondary text
+          ink: '#ECEDF1', // primary text
+          primary: '#9B73F4', // violet accent (pops on dark)
+          'primary-dark': '#8C60F3',
+          'primary-soft': '#1E1A2E', // dark violet tint for subtle fills
         },
       },
     },

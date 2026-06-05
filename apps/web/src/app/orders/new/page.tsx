@@ -64,7 +64,7 @@ export default function NewOrderPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-md border border-brand-border px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+            className="mt-1 w-full rounded-md border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-ink focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
           />
         </div>
 
@@ -76,7 +76,7 @@ export default function NewOrderPage() {
             id="product"
             value={sku}
             onChange={(e) => setSku(e.target.value)}
-            className="mt-1 w-full rounded-md border border-brand-border px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+            className="mt-1 w-full rounded-md border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-ink focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
           >
             {inventory.map((item) => (
               <option key={item.sku} value={item.sku}>
@@ -97,7 +97,7 @@ export default function NewOrderPage() {
             required
             value={quantity}
             onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-            className="mt-1 w-32 rounded-md border border-brand-border px-3 py-2 text-sm focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
+            className="mt-1 w-32 rounded-md border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-ink focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
           />
         </div>
 
@@ -109,7 +109,7 @@ export default function NewOrderPage() {
         </div>
 
         {error && (
-          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-inset ring-red-200">
+          <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-300 ring-1 ring-inset ring-red-500/20">
             {error}
           </p>
         )}

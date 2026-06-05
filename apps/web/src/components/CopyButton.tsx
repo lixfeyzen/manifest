@@ -20,9 +20,9 @@ export function CopyButton({ value, ariaLabel = 'Copy' }: { value: string; ariaL
           /* clipboard unavailable — no-op */
         }
       }}
-      className="inline-flex h-6 w-6 items-center justify-center rounded-md text-brand-muted transition-colors hover:bg-brand-bg hover:text-brand-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-primary"
+      className="inline-flex h-6 w-6 items-center justify-center rounded-md text-brand-muted transition-colors hover:bg-brand-surface-2 hover:text-brand-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-primary"
     >
-      {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+      {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
     </button>
   );
 }

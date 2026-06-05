@@ -56,7 +56,7 @@ export default async function OrdersPage({
                 className={`rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset ${
                   isActive
                     ? 'bg-brand-primary text-white ring-brand-primary'
-                    : 'bg-brand-surface text-brand-muted ring-brand-border hover:bg-brand-bg'
+                    : 'bg-brand-surface text-brand-muted ring-brand-border hover:bg-brand-surface-2'
                 }`}
               >
                 {s}
@@ -94,7 +94,7 @@ export default async function OrdersPage({
               </thead>
               <tbody className="divide-y divide-brand-border">
                 {orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-brand-bg">
+                  <tr key={order.id} className="hover:bg-brand-surface-2">
                     <td className="px-5 py-3">
                       <Link
                         href={`/orders/${order.id}`}

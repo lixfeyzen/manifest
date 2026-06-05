@@ -49,7 +49,7 @@ export function StatusStepper({ status }: { status: OrderStatus }) {
               <span
                 className={`text-xs font-medium ${
                   failedHere
-                    ? 'text-red-600'
+                    ? 'text-red-400'
                     : isComplete
                       ? 'text-brand-ink'
                       : 'text-brand-muted'

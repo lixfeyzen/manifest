@@ -65,7 +65,7 @@ export default async function DashboardPage() {
                 <li key={order.id}>
                   <Link
                     href={`/orders/${order.id}`}
-                    className="flex items-center justify-between px-5 py-3 hover:bg-brand-bg"
+                    className="flex items-center justify-between px-5 py-3 hover:bg-brand-surface-2"
                   >
                     <div className="min-w-0">
                       <p className="font-mono text-sm text-brand-ink">{shortId(order.id)}</p>

@@ -85,7 +85,7 @@ export function OrderActions({
               };
             })
           }
-          className="inline-flex items-center gap-2 rounded-lg border border-brand-border bg-brand-surface px-3.5 py-2 text-sm font-medium text-brand-ink transition-colors hover:bg-brand-bg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-2 rounded-lg border border-brand-border bg-brand-surface px-3.5 py-2 text-sm font-medium text-brand-ink transition-colors hover:bg-brand-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-40"
         >
           {busy === 'dup' ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           Simulate Duplicate Webhook
@@ -100,7 +100,7 @@ export function OrderActions({
                 return { kind: res.ok ? 'ok' : 'err', text: res.message };
               })
             }
-            className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3.5 py-2 text-sm font-medium text-amber-800 transition-colors hover:bg-amber-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-sm font-medium text-amber-300 transition-colors hover:bg-amber-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {busy === 'retry' ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -118,10 +118,10 @@ export function OrderActions({
           const Icon = t.kind === 'ok' ? CheckCircle2 : t.kind === 'info' ? Info : AlertCircle;
           const color =
             t.kind === 'ok'
-              ? 'text-emerald-600'
+              ? 'text-emerald-400'
               : t.kind === 'info'
                 ? 'text-brand-primary'
-                : 'text-red-500';
+                : 'text-red-400';
           return (
             <div
               key={t.id}

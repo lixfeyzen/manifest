@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8f6fc; /* Walkie Chalkie */
-  --foreground: #353148; /* Deep Velvet */
+  color-scheme: dark; /* native controls (select, scrollbars) render dark */
+  --background: #0b0c10;
+  --foreground: #ecedf1;
 }
 
 body {

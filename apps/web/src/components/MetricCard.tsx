@@ -5,9 +5,9 @@ type Accent = 'ink' | 'primary' | 'emerald' | 'muted' | 'red';
 const ICON_STYLES: Record<Accent, string> = {
   ink: 'bg-brand-bg text-brand-ink',
   primary: 'bg-brand-primary-soft text-brand-primary',
-  emerald: 'bg-emerald-50 text-emerald-600',
+  emerald: 'bg-emerald-500/10 text-emerald-400',
   muted: 'bg-brand-bg text-brand-muted',
-  red: 'bg-red-50 text-red-500',
+  red: 'bg-red-500/10 text-red-400',
 };
 
 export function MetricCard({
