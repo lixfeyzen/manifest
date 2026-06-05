@@ -100,7 +100,7 @@ export function OrderActions({
                 return { kind: res.ok ? 'ok' : 'err', text: res.message };
               })
             }
-            className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-sm font-medium text-amber-300 transition-colors hover:bg-amber-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {busy === 'retry' ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -118,14 +118,14 @@ export function OrderActions({
           const Icon = t.kind === 'ok' ? CheckCircle2 : t.kind === 'info' ? Info : AlertCircle;
           const color =
             t.kind === 'ok'
-              ? 'text-emerald-400'
+              ? 'text-emerald-600'
               : t.kind === 'info'
                 ? 'text-brand-primary'
-                : 'text-red-400';
+                : 'text-red-600';
           return (
             <div
               key={t.id}
-              className="pointer-events-auto flex items-start gap-2.5 rounded-lg border border-brand-border bg-brand-surface-2 p-3"
+              className="pointer-events-auto flex items-start gap-2.5 rounded-lg border border-brand-border bg-brand-surface p-3 shadow-md"
             >
               <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${color}`} />
               <p className="text-sm text-brand-ink">{t.text}</p>

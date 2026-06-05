@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark; /* native controls (select, scrollbars) render dark */
-  --background: #0b0c10;
-  --foreground: #ecedf1;
+  color-scheme: light;
+  --background: #f7f8fa;
+  --foreground: #18181b;
 }
 
 body {

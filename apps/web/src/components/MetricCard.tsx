@@ -14,7 +14,7 @@ export function MetricCard({
       <p className="text-sm text-brand-muted">{label}</p>
       <p
         className={`mt-1.5 text-3xl font-semibold tabular-nums tracking-tight ${
-          accent === 'red' && value > 0 ? 'text-red-400' : 'text-brand-ink'
+          accent === 'red' && value > 0 ? 'text-red-600' : 'text-brand-ink'
         }`}
       >
         {value}

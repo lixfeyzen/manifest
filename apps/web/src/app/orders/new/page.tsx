@@ -52,7 +52,7 @@ export default function NewOrderPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-5 rounded-xl border border-brand-border bg-brand-surface p-6"
+        className="space-y-5 rounded-xl border border-brand-border bg-brand-surface p-6 shadow-sm"
       >
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-brand-ink">
@@ -109,7 +109,7 @@ export default function NewOrderPage() {
         </div>
 
         {error && (
-          <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-300 ring-1 ring-inset ring-red-500/20">
+          <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-700 ring-1 ring-inset ring-red-500/20">
             {error}
           </p>
         )}

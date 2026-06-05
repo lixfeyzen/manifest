@@ -8,18 +8,18 @@ const config: Config = {
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
       },
       colors: {
-        // Dark "infra console" theme — violet accent on near-black.
+        // Clean light theme — white cards on near-white, violet used sparingly.
         brand: {
-          bg: '#0B0C10', // page background (near-black)
-          surface: '#15161B', // panels / cards
-          'surface-2': '#1C1E25', // hover / raised
-          border: '#262833', // hairline borders
-          chalice: '#3A3D4A', // neutral dots / dividers accent
-          muted: '#9499A6', // secondary text
-          ink: '#ECEDF1', // primary text
-          primary: '#9B73F4', // violet accent (pops on dark)
-          'primary-dark': '#8C60F3',
-          'primary-soft': '#1E1A2E', // dark violet tint for subtle fills
+          bg: '#F7F8FA', // app background (near-white)
+          surface: '#FFFFFF', // cards / panels
+          'surface-2': '#F1F2F5', // hover / subtle fills
+          border: '#E6E8EC', // hairline borders
+          chalice: '#C4C7CE', // neutral dots / dividers
+          muted: '#6B7280', // secondary text
+          ink: '#18181B', // primary text (near-black)
+          primary: '#7C5CFC', // violet accent
+          'primary-dark': '#6A47E8',
+          'primary-soft': '#F1ECFE', // light violet tint for subtle fills
         },
       },
     },

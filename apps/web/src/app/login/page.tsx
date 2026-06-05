@@ -66,7 +66,7 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>
+          <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-700">{error}</p>
         )}
 
         <button
@@ -80,7 +80,7 @@ export default function LoginPage() {
 
       <p className="mt-4 text-sm text-brand-muted">
         No account?{' '}
-        <Link href="/register" className="text-brand-primary hover:text-brand-primary-dark">
+        <Link href="/register" className="text-brand-ink hover:text-brand-primary">
           Create one
         </Link>
       </p>

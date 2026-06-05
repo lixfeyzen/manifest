@@ -46,7 +46,7 @@ export default async function DashboardPage() {
         <div>
           <div className="mb-3 flex items-baseline justify-between">
             <h2 className="text-sm font-semibold text-brand-ink">Recent orders</h2>
-            <Link href="/orders" className="text-sm text-brand-primary hover:text-brand-primary-dark">
+            <Link href="/orders" className="text-sm text-brand-ink hover:text-brand-primary">
               View all →
             </Link>
           </div>

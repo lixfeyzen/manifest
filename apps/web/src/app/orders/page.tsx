@@ -90,7 +90,7 @@ export default async function OrdersPage({
                   <td className="py-3">
                     <Link
                       href={`/orders/${order.id}`}
-                      className="font-mono text-brand-primary hover:text-brand-primary-dark"
+                      className="font-mono text-brand-ink hover:text-brand-primary"
                     >
                       {shortId(order.id)}
                     </Link>
