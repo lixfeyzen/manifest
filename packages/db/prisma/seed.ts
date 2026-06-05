@@ -22,7 +22,7 @@ async function main(): Promise<void> {
       create: item,
     });
   }
-  // eslint-disable-next-line no-console
+
   console.log(`Seeded ${INVENTORY.length} inventory items.`);
 
   // Demo login — for local/dev only, never in production.
@@ -34,14 +34,13 @@ async function main(): Promise<void> {
       update: { passwordHash },
       create: { email, passwordHash },
     });
-    // eslint-disable-next-line no-console
+
     console.log(`Seeded demo user: ${email} / demo12345`);
   }
 }
 
 main()
   .catch((error) => {
-    // eslint-disable-next-line no-console
     console.error('Seed failed:', error);
     process.exit(1);
   })

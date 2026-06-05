@@ -62,6 +62,9 @@ jobs:
       - name: Prepare test env
         run: cp .env.test.example .env.test
 
+      - name: Lint
+        run: pnpm lint
+
       - name: Typecheck
         run: pnpm typecheck
 
