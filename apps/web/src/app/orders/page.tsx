@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { ApiError } from '@/components/ApiError';
 import { AutoRefresh } from '@/components/AutoRefresh';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -133,6 +134,7 @@ export default async function OrdersPage({
       </div>
     );
   } catch (error) {
+    if ((error as { status?: number })?.status === 401) redirect('/login');
     return <ApiError error={error} />;
   }
 }

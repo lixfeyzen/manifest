@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { ApiError } from '@/components/ApiError';
 import { AutoRefresh } from '@/components/AutoRefresh';
 import { CopyButton } from '@/components/CopyButton';
@@ -25,6 +25,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   try {
     order = await fetchOrder(id);
   } catch (error) {
+    if ((error as { status?: number })?.status === 401) redirect('/login');
     return <ApiError error={error} />;
   }
   if (!order) notFound();

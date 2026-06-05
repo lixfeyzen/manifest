@@ -1,5 +1,6 @@
 import { AlertTriangle, CheckCircle2, Clock, CreditCard, Layers, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { ApiError } from '@/components/ApiError';
 import { AutoRefresh } from '@/components/AutoRefresh';
 import { MetricCard } from '@/components/MetricCard';
@@ -210,6 +211,7 @@ export default async function DashboardPage() {
       </div>
     );
   } catch (error) {
+    if ((error as { status?: number })?.status === 401) redirect('/login');
     return <ApiError error={error} />;
   }
 }

@@ -26,7 +26,11 @@ export async function graphqlRequest<T>(
   });
 
   if (!res.ok) {
-    throw new Error(`API request failed: ${res.status} ${res.statusText}`);
+    const err = new Error(`API request failed: ${res.status} ${res.statusText}`) as Error & {
+      status?: number;
+    };
+    err.status = res.status;
+    throw err;
   }
 
   const json = (await res.json()) as { data?: T; errors?: Array<{ message: string }> };
