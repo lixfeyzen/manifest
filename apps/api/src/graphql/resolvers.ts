@@ -1,12 +1,6 @@
-import type {
-  FulfillmentJob,
-  Invoice,
-  OrderEvent,
-  Payment,
-  Prisma,
-} from '@manifest/db';
+import type { FulfillmentJob, Invoice, OrderEvent, Payment, Prisma } from '@manifest/db';
 import type { CreateOrderInput, OrderStatus } from '@manifest/shared';
-import { getDashboardMetrics } from '../services/dashboard-service.js';
+import { getDashboardMetrics, getOrderThroughput } from '../services/dashboard-service.js';
 import { retryFulfillment } from '../services/fulfillment-service.js';
 import {
   createOrder,
@@ -23,9 +17,12 @@ const iso = (date: Date): string => date.toISOString();
 
 export const resolvers = {
   Query: {
-    orders: (_parent: unknown, args: { status?: OrderStatus }) => getOrders(args.status),
+    orders: (_parent: unknown, args: { status?: OrderStatus; limit?: number }) =>
+      getOrders(args.status, args.limit ?? 50),
     order: (_parent: unknown, args: { id: string }) => getOrder(args.id),
     dashboardMetrics: () => getDashboardMetrics(),
+    orderThroughput: (_parent: unknown, args: { days?: number }) =>
+      getOrderThroughput(args.days ?? 14),
     inventoryItems: () => getInventoryItems(),
   },
 

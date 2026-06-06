@@ -23,9 +23,6 @@ export function reserveStock(sku: string, available: number, requested: number):
 }
 
 /** True when a reservation already exists for this order+sku (retry guard). */
-export function isAlreadyReserved(
-  existingReservedSkus: ReadonlySet<string>,
-  sku: string,
-): boolean {
+export function isAlreadyReserved(existingReservedSkus: ReadonlySet<string>, sku: string): boolean {
   return existingReservedSkus.has(sku);
 }

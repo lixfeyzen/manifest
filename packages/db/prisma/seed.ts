@@ -31,30 +31,95 @@ const CUSTOMERS = [
   'arjun.patel@gmail.com',
   'chloe.weber@gmail.com',
   'daniel.aoki@outlook.com',
+  'isabella.costa@gmail.com',
+  'mateo.garcia@outlook.com',
+  'hannah.lee@gmail.com',
 ];
 
-// A believable status mix spread across the last two weeks.
-const PLAN: Array<{ daysAgo: number; status: OrderStatus }> = [
-  { daysAgo: 13, status: OrderStatus.FULFILLED },
-  { daysAgo: 12, status: OrderStatus.FULFILLED },
-  { daysAgo: 11, status: OrderStatus.FAILED },
-  { daysAgo: 10, status: OrderStatus.FULFILLED },
-  { daysAgo: 9, status: OrderStatus.PAID },
-  { daysAgo: 8, status: OrderStatus.FULFILLED },
-  { daysAgo: 7, status: OrderStatus.FULFILLED },
-  { daysAgo: 6, status: OrderStatus.FULFILLED },
-  { daysAgo: 5, status: OrderStatus.FULFILLING },
-  { daysAgo: 4, status: OrderStatus.FULFILLED },
-  { daysAgo: 3, status: OrderStatus.FULFILLED },
-  { daysAgo: 3, status: OrderStatus.PENDING },
-  { daysAgo: 2, status: OrderStatus.FULFILLED },
-  { daysAgo: 1, status: OrderStatus.PAID },
-  { daysAgo: 1, status: OrderStatus.FAILED },
-  { daysAgo: 0, status: OrderStatus.FULFILLED },
-  { daysAgo: 0, status: OrderStatus.PENDING },
-];
+interface OrderSpec {
+  status: OrderStatus;
+  customer: string;
+  sku: string;
+  quantity: number;
+  createdAt: Date;
+}
 
-const shortId = (id: string) => id.replace(/-/g, '').slice(-8).toUpperCase();
+/** Small fixed-seed PRNG so `db:reset` always produces the same believable set. */
+function mulberry32(seed: number): () => number {
+  return function () {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * A believable status for an order, given how old it is. History is terminal
+ * (orders from days ago are done or failed — never still "pending"); only the
+ * last day or two carries in-flight states, and today shows a live pipeline.
+ * Failures are rare. This is the kind of truthfulness a careful reader checks.
+ */
+function statusFor(daysAgo: number, r: number): OrderStatus {
+  if (daysAgo >= 3) return r < 0.92 ? OrderStatus.FULFILLED : OrderStatus.FAILED;
+  if (daysAgo >= 1) {
+    if (r < 0.7) return OrderStatus.FULFILLED;
+    if (r < 0.85) return OrderStatus.PAID;
+    if (r < 0.93) return OrderStatus.FULFILLING;
+    return OrderStatus.FAILED;
+  }
+  // Today: a live pipeline across every stage.
+  if (r < 0.3) return OrderStatus.FULFILLED;
+  if (r < 0.55) return OrderStatus.PENDING;
+  if (r < 0.8) return OrderStatus.PAID;
+  if (r < 0.95) return OrderStatus.FULFILLING;
+  return OrderStatus.FAILED;
+}
+
+/** Generate ~50 orders spread densely across the last 14 days. */
+function buildPlan(): OrderSpec[] {
+  const rand = mulberry32(20260606);
+  const pick = <T>(arr: T[]): T => arr[Math.floor(rand() * arr.length)]!;
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const elapsedToday = Date.now() - startOfToday.getTime();
+
+  const plan: OrderSpec[] = [];
+  for (let daysAgo = 13; daysAgo >= 0; daysAgo--) {
+    const count = 2 + Math.floor(rand() * 4); // 2–5 orders per day
+    for (let k = 0; k < count; k++) {
+      const status = statusFor(daysAgo, rand());
+      // Failures land on the scarce item, so "insufficient stock" stays truthful.
+      const sku = status === OrderStatus.FAILED ? 'SKU-HOODIE' : pick(INVENTORY).sku;
+
+      let createdAt: Date;
+      if (daysAgo === 0) {
+        // Earlier today (never in the future).
+        createdAt = new Date(
+          startOfToday.getTime() + Math.floor(rand() * Math.max(elapsedToday, 1)),
+        );
+      } else {
+        const dayStart = startOfToday.getTime() - daysAgo * 86_400_000;
+        createdAt = new Date(dayStart + Math.floor(rand() * 86_400_000));
+      }
+
+      plan.push({
+        status,
+        customer: pick(CUSTOMERS),
+        sku,
+        quantity: 1 + Math.floor(rand() * 3),
+        createdAt,
+      });
+    }
+  }
+
+  // Oldest first, so insertion order matches the timeline.
+  return plan.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+}
+
+const shortId = (id: string): string => id.replace(/-/g, '').slice(-8).toUpperCase();
 
 /** Which lifecycle events an order has reached, in order, for a given status. */
 function eventsFor(status: OrderStatus): string[] {
@@ -87,15 +152,14 @@ async function seedOrders(): Promise<void> {
   }
 
   const priceOf = new Map(INVENTORY.map((i) => [i.sku, i]));
+  const plan = buildPlan();
 
-  for (let i = 0; i < PLAN.length; i++) {
-    const spec = PLAN[i]!;
-    const product = INVENTORY[i % INVENTORY.length]!;
-    const quantity = (i % 3) + 1;
-    const unitPrice = priceOf.get(product.sku)!.unitPrice;
-    const totalAmount = unitPrice * quantity;
-    const customerEmail = CUSTOMERS[i % CUSTOMERS.length]!;
-    const created = new Date(Date.now() - spec.daysAgo * 86_400_000 - (i % 9) * 3_600_000);
+  for (let i = 0; i < plan.length; i++) {
+    const spec = plan[i]!;
+    const product = priceOf.get(spec.sku)!;
+    const quantity = spec.quantity;
+    const totalAmount = product.unitPrice * quantity;
+    const created = spec.createdAt;
     const correlationId = `seed_${randomUUID()}`;
     const events = eventsFor(spec.status);
     const paid = spec.status !== OrderStatus.PENDING;
@@ -103,12 +167,14 @@ async function seedOrders(): Promise<void> {
     await prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
         data: {
-          customerEmail,
+          customerEmail: spec.customer,
           totalAmount,
           status: spec.status,
           createdAt: created,
           items: {
-            create: [{ sku: product.sku, name: product.name, quantity, unitPrice }],
+            create: [
+              { sku: product.sku, name: product.name, quantity, unitPrice: product.unitPrice },
+            ],
           },
           events: {
             create: events.map((type, e) => ({
@@ -149,9 +215,7 @@ async function seedOrders(): Promise<void> {
             status: jobStatus,
             attempts: spec.status === OrderStatus.FAILED ? 3 : 1,
             lastError:
-              spec.status === OrderStatus.FAILED
-                ? 'Insufficient stock for ' + product.sku
-                : null,
+              spec.status === OrderStatus.FAILED ? `Insufficient stock for ${product.sku}` : null,
           },
         });
       }
@@ -172,7 +236,7 @@ async function seedOrders(): Promise<void> {
     });
   }
 
-  console.log(`Seeded ${PLAN.length} demo orders.`);
+  console.log(`Seeded ${plan.length} demo orders across 14 days.`);
 }
 
 async function main(): Promise<void> {

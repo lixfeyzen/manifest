@@ -2,7 +2,9 @@
   "name": "manifest",
   "version": "0.1.0",
   "private": true,
-  "description": "Event-driven fulfillment operations dashboard — track every order from payment webhook to fulfillment.",
+  "license": "MIT",
+  "author": "Yohanes",
+  "description": "Event-driven fulfillment operations dashboard that tracks every order from payment webhook to fulfillment.",
   "engines": {
     "node": ">=20"
   },

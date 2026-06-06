@@ -1,12 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { prisma, type User } from '@manifest/db';
-import {
-  type LoginInput,
-  type RegisterInput,
-  loginSchema,
-  registerSchema,
-} from '@manifest/shared';
+import { type LoginInput, type RegisterInput, loginSchema, registerSchema } from '@manifest/shared';
 
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 export const SESSION_COOKIE = 'sid';

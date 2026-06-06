@@ -21,11 +21,7 @@ export class DomainError extends Error {
 /** Thrown when an order status transition is not allowed by the state machine. */
 export class InvalidOrderTransitionError extends DomainError {
   constructor(from: string, to: string) {
-    super(
-      'INVALID_ORDER_TRANSITION',
-      `Cannot transition order from ${from} to ${to}`,
-      false,
-    );
+    super('INVALID_ORDER_TRANSITION', `Cannot transition order from ${from} to ${to}`, false);
     this.name = 'InvalidOrderTransitionError';
   }
 }
@@ -33,11 +29,7 @@ export class InvalidOrderTransitionError extends DomainError {
 /** Thrown when fulfillment is attempted on an order that is not in a fulfillable state. */
 export class OrderNotFulfillableError extends DomainError {
   constructor(status: string) {
-    super(
-      'ORDER_NOT_FULFILLABLE',
-      `Order in status ${status} cannot be fulfilled`,
-      false,
-    );
+    super('ORDER_NOT_FULFILLABLE', `Order in status ${status} cannot be fulfilled`, false);
     this.name = 'OrderNotFulfillableError';
   }
 }
@@ -51,5 +43,21 @@ export class InsufficientStockError extends DomainError {
       false,
     );
     this.name = 'InsufficientStockError';
+  }
+}
+
+/** Thrown when an order references a SKU that does not exist in inventory. */
+export class UnknownSkuError extends DomainError {
+  constructor(sku: string) {
+    super('UNKNOWN_SKU', `Unknown SKU: ${sku}`, false);
+    this.name = 'UnknownSkuError';
+  }
+}
+
+/** Thrown when an operation references an order id that does not exist. */
+export class OrderNotFoundError extends DomainError {
+  constructor(orderId: string) {
+    super('ORDER_NOT_FOUND', `Order not found: ${orderId}`, false);
+    this.name = 'OrderNotFoundError';
   }
 }

@@ -6,7 +6,10 @@ export const logger = pino({
   base: { service: 'manifest-worker' },
   transport:
     env.NODE_ENV === 'development'
-      ? { target: 'pino-pretty', options: { translateTime: 'SYS:HH:MM:ss', ignore: 'pid,hostname' } }
+      ? {
+          target: 'pino-pretty',
+          options: { translateTime: 'SYS:HH:MM:ss', ignore: 'pid,hostname' },
+        }
       : undefined,
 });
 

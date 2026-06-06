@@ -8,8 +8,7 @@ import { fulfillmentQueue, redisConnection } from '../src/queue.js';
 import { createOrder } from '../src/services/order-service.js';
 import { resetAndSeed } from './helpers.js';
 
-const sign = (body: string) =>
-  createHmac('sha256', env.WEBHOOK_SECRET).update(body).digest('hex');
+const sign = (body: string) => createHmac('sha256', env.WEBHOOK_SECRET).update(body).digest('hex');
 
 describe('payment webhook (REST integration)', () => {
   let app: FastifyInstance;
@@ -51,7 +50,10 @@ describe('payment webhook (REST integration)', () => {
   }
 
   async function newOrder() {
-    return createOrder({ customerEmail: 'buyer@example.com', items: [{ sku: 'SKU-COFFEE', quantity: 1 }] });
+    return createOrder({
+      customerEmail: 'buyer@example.com',
+      items: [{ sku: 'SKU-COFFEE', quantity: 1 }],
+    });
   }
 
   it('processes the first webhook: order PAID, payment + job created', async () => {
@@ -142,5 +144,40 @@ describe('payment webhook (REST integration)', () => {
 
     // And nothing was processed.
     expect(await prisma.payment.count({ where: { orderId: order.id } })).toBe(0);
+  });
+
+  it('is race-safe: two concurrent identical webhooks process exactly once', async () => {
+    const order = await newOrder();
+
+    // Fire two identical webhooks at the same time. One must win the ProcessedEvent
+    // claim; the other must lose (either the unique-constraint race or the gate) and
+    // be recorded as a duplicate — never a second payment/job.
+    const [a, b] = await Promise.all([
+      postWebhook(order.id, 'corr_race_a'),
+      postWebhook(order.id, 'corr_race_b'),
+    ]);
+
+    expect([a.body.status, b.body.status].sort()).toEqual(['ignored', 'processed']);
+
+    // Every side effect happened exactly once.
+    expect(await prisma.payment.count({ where: { orderId: order.id } })).toBe(1);
+    expect(await prisma.fulfillmentJob.count({ where: { orderId: order.id } })).toBe(1);
+    expect(
+      await prisma.processedEvent.count({
+        where: { idempotencyKey: `payment_${order.id}_demo` },
+      }),
+    ).toBe(1);
+
+    const updated = await prisma.order.findUnique({ where: { id: order.id } });
+    expect(updated!.status).toBe('PAID');
+
+    // The losing request recorded a single duplicate-ignored event.
+    const ignored = await prisma.orderEvent.findMany({
+      where: { orderId: order.id, type: 'duplicate_event.ignored' },
+    });
+    expect(ignored.length).toBe(1);
+    expect(['concurrent', 'in_progress', 'already_processed']).toContain(
+      (ignored[0]!.payload as { reason?: string }).reason,
+    );
   });
 });

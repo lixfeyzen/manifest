@@ -61,6 +61,29 @@ export interface Order {
   lastEvent: OrderEvent | null;
 }
 
+/** Slim order shape returned by list queries (table + dashboard recent). */
+export interface OrderListItem {
+  id: string;
+  customerEmail: string;
+  totalAmount: number;
+  status: OrderStatus;
+  createdAt: string;
+  lastEvent: Pick<OrderEvent, 'id' | 'type' | 'createdAt'> | null;
+}
+
+/** One day of segmented order counts for the throughput chart. */
+export interface ThroughputDay {
+  date: string;
+  today: boolean;
+  pending: number;
+  paid: number;
+  fulfilling: number;
+  fulfilled: number;
+  failed: number;
+  total: number;
+  hasFailedJob: boolean;
+}
+
 export interface InventoryItem {
   id: string;
   sku: string;

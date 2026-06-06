@@ -16,7 +16,7 @@ const AUTH_FILE = 'playwright/.auth/user.json';
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
-  retries: 0,
+  retries: process.env.CI ? 2 : 0,
   timeout: 30_000,
   reporter: 'list',
   use: {
@@ -38,9 +38,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm --filter @manifest/web dev',
+    // Locally we reuse the already-running `pnpm dev` stack. In CI nothing is
+    // running, so boot the whole stack (web + api + worker) via Turbo.
+    command: process.env.CI ? 'pnpm dev' : 'pnpm --filter @manifest/web dev',
     url: WEB_URL,
-    reuseExistingServer: true,
-    timeout: 120_000,
+    reuseExistingServer: !process.env.CI,
+    timeout: 180_000,
   },
 });

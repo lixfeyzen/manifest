@@ -5,10 +5,11 @@ import {
   DASHBOARD_QUERY,
   ORDERS_QUERY,
   ORDER_QUERY,
+  THROUGHPUT_QUERY,
   graphqlRequest,
 } from './graphql';
 import type { AuthUser } from './queries';
-import type { DashboardMetrics, Order, OrderStatus } from './types';
+import type { DashboardMetrics, Order, OrderListItem, OrderStatus, ThroughputDay } from './types';
 
 // Server-only data fetchers. A Server Component's fetch does not automatically
 // carry the browser's cookies, so we read them via next/headers and forward the
@@ -27,13 +28,22 @@ export async function fetchDashboardMetrics(): Promise<DashboardMetrics> {
   return data.dashboardMetrics;
 }
 
-export async function fetchOrders(status?: OrderStatus): Promise<Order[]> {
-  const data = await graphqlRequest<{ orders: Order[] }>(
+export async function fetchOrders(status?: OrderStatus, limit = 50): Promise<OrderListItem[]> {
+  const data = await graphqlRequest<{ orders: OrderListItem[] }>(
     ORDERS_QUERY,
-    { status },
+    { status, limit },
     await cookieHeader(),
   );
   return data.orders;
+}
+
+export async function fetchThroughput(days = 14): Promise<ThroughputDay[]> {
+  const data = await graphqlRequest<{ orderThroughput: ThroughputDay[] }>(
+    THROUGHPUT_QUERY,
+    { days },
+    await cookieHeader(),
+  );
+  return data.orderThroughput;
 }
 
 export async function fetchOrder(id: string): Promise<Order | null> {

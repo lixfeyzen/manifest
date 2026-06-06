@@ -16,10 +16,10 @@ const config: Config = {
           'surface-2': '#F1F2F5', // hover / subtle fills
           border: '#E6E8EC', // hairline borders
           chalice: '#C4C7CE', // neutral dots / dividers
-          muted: '#6B7280', // secondary text
+          muted: '#5F6B7A', // secondary text (AA-contrast on bg and surface)
           ink: '#18181B', // primary text (near-black)
-          primary: '#7C5CFC', // violet accent
-          'primary-dark': '#6A47E8',
+          primary: '#6A47E8', // violet accent (white text on it passes AA)
+          'primary-dark': '#5B39D6', // darker hover
           'primary-soft': '#F1ECFE', // light violet tint for subtle fills
         },
       },

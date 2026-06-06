@@ -24,6 +24,18 @@ export function shortId(id: string): string {
 }
 
 /**
+ * Title-case an UPPERCASE / SCREAMING_SNAKE enum for display:
+ * "FULFILLED" → "Fulfilled", "ALL" → "All". Keeps enum values out of the UI.
+ */
+export function formatStatus(value: string): string {
+  return value
+    .toLowerCase()
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+/**
  * Derive a human display name from an email's local part:
  * "olivia.martin@gmail.com" → "Olivia Martin". Falls back to the email.
  */

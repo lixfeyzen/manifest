@@ -32,13 +32,7 @@ export function Logo({ className }: { className?: string }) {
 }
 
 /** Logomark + "Manifest" wordmark, used in the sidebar / auth screens. */
-export function Wordmark({
-  className = '',
-  subtitle,
-}: {
-  className?: string;
-  subtitle?: string;
-}) {
+export function Wordmark({ className = '', subtitle }: { className?: string; subtitle?: string }) {
   return (
     <span className={`flex items-center gap-2.5 ${className}`}>
       <Logo className="h-7 w-7 shrink-0 text-brand-primary" />

@@ -59,6 +59,20 @@ export const ORDER_FIELDS = `
   lastEvent { id type createdAt }
 `;
 
-export const ORDERS_QUERY = `query Orders($status: OrderStatus) { orders(status: $status) { ${ORDER_FIELDS} } }`;
+/**
+ * Slim field selection for LIST views (orders table + dashboard recent). It pulls
+ * only what those views render, instead of every event/job/payment per row.
+ */
+export const ORDER_LIST_FIELDS = `
+  id
+  customerEmail
+  totalAmount
+  status
+  createdAt
+  lastEvent { id type createdAt }
+`;
+
+export const ORDERS_QUERY = `query Orders($status: OrderStatus, $limit: Int) { orders(status: $status, limit: $limit) { ${ORDER_LIST_FIELDS} } }`;
 export const ORDER_QUERY = `query Order($id: ID!) { order(id: $id) { ${ORDER_FIELDS} } }`;
 export const DASHBOARD_QUERY = `query { dashboardMetrics { totalOrders pendingOrders paidOrders fulfilledOrders failedJobs } }`;
+export const THROUGHPUT_QUERY = `query Throughput($days: Int) { orderThroughput(days: $days) { date today pending paid fulfilling fulfilled failed total hasFailedJob } }`;

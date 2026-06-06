@@ -79,7 +79,10 @@ model Order {
   fulfillmentJobs FulfillmentJob[]
   reservations    InventoryReservation[]
 
-  @@index([status])
+  // Composite index serves the hot orders-list query (filter by status, order by
+  // createdAt) and, as a left-prefix, status-only lookups. createdAt alone stays
+  // for the unfiltered, time-ordered list.
+  @@index([status, createdAt])
   @@index([createdAt])
 }
 
@@ -94,7 +97,10 @@ model OrderItem {
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  @@index([orderId])
+  // One line per (order, sku) so the fulfillment reservation loop's
+  // one-reservation-per-sku assumption is a DB invariant. The unique index also
+  // covers the orderId lookups, so a separate @@index([orderId]) is redundant.
+  @@unique([orderId, sku])
 }
 
 model InventoryItem {

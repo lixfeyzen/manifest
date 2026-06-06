@@ -104,6 +104,18 @@ export const typeDefs = /* GraphQL */ `
     failedJobs: Int!
   }
 
+  type ThroughputDay {
+    date: String!
+    today: Boolean!
+    pending: Int!
+    paid: Int!
+    fulfilling: Int!
+    fulfilled: Int!
+    failed: Int!
+    total: Int!
+    hasFailedJob: Boolean!
+  }
+
   type RetryResult {
     ok: Boolean!
     message: String!
@@ -122,9 +134,10 @@ export const typeDefs = /* GraphQL */ `
   }
 
   type Query {
-    orders(status: OrderStatus): [Order!]!
+    orders(status: OrderStatus, limit: Int): [Order!]!
     order(id: ID!): Order
     dashboardMetrics: DashboardMetrics!
+    orderThroughput(days: Int): [ThroughputDay!]!
     inventoryItems: [InventoryItem!]!
   }
 

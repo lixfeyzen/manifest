@@ -11,6 +11,16 @@ const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET ?? 'dev-webhook-secret-change-
  * and POST a webhook to us.
  */
 export async function POST(request: Request): Promise<Response> {
+  // Only an authenticated operator may trigger a (signed) webhook. Without this
+  // check the route would be an open signing oracle: anyone could forge a valid
+  // "payment succeeded" webhook for any order id.
+  const cookieHeader = request.headers.get('cookie') ?? '';
+  const me = await fetch(`${API_URL}/auth/me`, { headers: { cookie: cookieHeader } });
+  const meData = (await me.json().catch(() => ({}))) as { user?: unknown };
+  if (!me.ok || !meData.user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   let parsed: { orderId?: unknown; amount?: unknown; duplicate?: unknown };
   try {
     parsed = await request.json();
@@ -19,7 +29,10 @@ export async function POST(request: Request): Promise<Response> {
   }
   const { orderId, amount, duplicate } = parsed;
   if (typeof orderId !== 'string' || !orderId || typeof amount !== 'number') {
-    return Response.json({ error: 'orderId (string) and amount (number) are required' }, { status: 400 });
+    return Response.json(
+      { error: 'orderId (string) and amount (number) are required' },
+      { status: 400 },
+    );
   }
 
   const payload = {

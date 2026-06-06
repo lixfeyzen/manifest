@@ -39,10 +39,23 @@ describe('createOrder (GraphQL integration)', () => {
 
   it('creates a PENDING order with correct total priced from inventory', async () => {
     const body = await graphql(
-      `mutation($input: CreateOrderInput!) {
-        createOrder(input: $input) { id status totalAmount items { sku quantity unitPrice } }
-      }`,
-      { input: { customerEmail: 'buyer@example.com', items: [{ sku: 'SKU-COFFEE', quantity: 2 }] } },
+      `
+        mutation ($input: CreateOrderInput!) {
+          createOrder(input: $input) {
+            id
+            status
+            totalAmount
+            items {
+              sku
+              quantity
+              unitPrice
+            }
+          }
+        }
+      `,
+      {
+        input: { customerEmail: 'buyer@example.com', items: [{ sku: 'SKU-COFFEE', quantity: 2 }] },
+      },
     );
 
     const order = body.data.createOrder;
@@ -60,7 +73,13 @@ describe('createOrder (GraphQL integration)', () => {
 
   it('rejects an unknown SKU', async () => {
     const body = await graphql(
-      `mutation($input: CreateOrderInput!) { createOrder(input: $input) { id } }`,
+      `
+        mutation ($input: CreateOrderInput!) {
+          createOrder(input: $input) {
+            id
+          }
+        }
+      `,
       { input: { customerEmail: 'buyer@example.com', items: [{ sku: 'SKU-NOPE', quantity: 1 }] } },
     );
     expect(body.errors?.[0]?.message).toContain('Unknown SKU');

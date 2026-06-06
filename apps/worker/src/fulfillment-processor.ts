@@ -1,10 +1,9 @@
-import { prisma } from '@manifest/db';
+import { Prisma, prisma } from '@manifest/db';
 import {
   InsufficientStockError,
   assertTransition,
   buildInvoiceNumber,
   decideFulfillment,
-  reserveStock,
   shouldCreateInvoice,
 } from '@manifest/domain';
 import {
@@ -30,14 +29,18 @@ export class PermanentFulfillmentError extends Error {
 
 /**
  * Fulfill an order (Flow 3). Designed to be safe to run MORE THAN ONCE for the
- * same order — every side effect checks whether it has already happened:
+ * same order. It runs as three atomic phases, each wrapping its state change with
+ * the timeline event it implies, so the timeline can never disagree with the data
+ * even if the process crashes between phases:
  *
- *   - status transitions go through the domain state machine
- *   - inventory is only reserved for an (order, sku) pair that has no reservation
- *   - an invoice is only created if the order has none
+ *   1. PAID/FAILED -> FULFILLING  (+ fulfillment.started)
+ *   2. reserve inventory          (+ inventory.reserved)
+ *   3. issue invoice + FULFILLED  (+ invoice.generated, order.fulfilled)
  *
- * This is what makes BullMQ retries (and the manual "Retry" button) safe: a second
- * run cannot double-deduct stock or issue a second invoice.
+ * Every side effect is guarded so a retry resumes rather than duplicates:
+ *   - the transition only runs when the order still needs it (state machine)
+ *   - stock is decremented with an atomic, guarded UPDATE (no oversell, no double)
+ *   - a reservation/invoice that already exists is skipped
  */
 export async function runFulfillment(rawData: FulfillmentJobData): Promise<void> {
   const { orderId, correlationId } = fulfillmentJobDataSchema.parse(rawData);
@@ -57,26 +60,29 @@ export async function runFulfillment(rawData: FulfillmentJobData): Promise<void>
   }
 
   if (action.kind === 'noop') {
-    log.info({ orderId }, 'Order already fulfilled — no-op');
+    log.info({ orderId }, 'Order already fulfilled, no-op');
     return;
   }
 
-  // PAID/FAILED -> FULFILLING (a 'continue' action means it is already FULFILLING).
+  // ---- Phase 1: PAID/FAILED -> FULFILLING (atomic with its event) -----------
+  // Skipped on a resumed attempt (status already FULFILLING => 'continue'), so the
+  // fulfillment.started event is written at most once.
   if (action.kind === 'start') {
-    await prisma.order.update({
-      where: { id: orderId },
-      data: { status: assertTransition(order.status as OrderStatus, OrderStatus.FULFILLING) },
+    await prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id: orderId },
+        data: { status: assertTransition(order.status as OrderStatus, OrderStatus.FULFILLING) },
+      });
+      await writeEvent(tx, {
+        orderId,
+        type: OrderEventType.FULFILLMENT_STARTED,
+        correlationId,
+        payload: { attemptFrom: order.status },
+      });
     });
   }
 
-  await writeEvent(prisma, {
-    orderId,
-    type: OrderEventType.FULFILLMENT_STARTED,
-    correlationId,
-    payload: { attemptFrom: order.status },
-  });
-
-  // ---- Reserve inventory (retry-safe, atomic) -------------------------------
+  // ---- Phase 2: reserve inventory (atomic, retry-safe) ----------------------
   try {
     await prisma.$transaction(async (tx) => {
       const existing = await tx.inventoryReservation.findMany({
@@ -86,96 +92,114 @@ export async function runFulfillment(rawData: FulfillmentJobData): Promise<void>
       const reservedSkus = new Set(existing.map((r) => r.sku));
 
       for (const item of order.items) {
-        // Already reserved on a previous attempt → skip (no double deduction).
+        // Already reserved on a previous attempt -> skip (no double deduction).
         if (reservedSkus.has(item.sku)) continue;
 
-        const inv = await tx.inventoryItem.findUnique({ where: { sku: item.sku } });
-        if (!inv) {
-          throw new InsufficientStockError(item.sku, item.quantity, 0);
+        // Atomic guarded decrement: succeeds only if enough stock remains. The row
+        // lock makes a competing transaction re-check `stock >= quantity` against the
+        // committed value, so two orders racing for the same SKU can never oversell.
+        const dec = await tx.inventoryItem.updateMany({
+          where: { sku: item.sku, stock: { gte: item.quantity } },
+          data: { stock: { decrement: item.quantity } },
+        });
+        if (dec.count === 0) {
+          const inv = await tx.inventoryItem.findUnique({ where: { sku: item.sku } });
+          throw new InsufficientStockError(item.sku, item.quantity, inv?.stock ?? 0);
         }
 
-        // Domain rule: never lets stock drop below zero.
-        const newStock = reserveStock(item.sku, inv.stock, item.quantity);
-        await tx.inventoryItem.update({ where: { sku: item.sku }, data: { stock: newStock } });
         await tx.inventoryReservation.create({
           data: { orderId, sku: item.sku, quantity: item.quantity },
         });
       }
+
+      await writeEvent(tx, {
+        orderId,
+        type: OrderEventType.INVENTORY_RESERVED,
+        correlationId,
+        payload: { items: order.items.map((i) => ({ sku: i.sku, quantity: i.quantity })) },
+      });
     });
   } catch (error) {
     if (error instanceof InsufficientStockError) {
-      // Permanent: mark the order failed and stop retrying.
+      // Permanent: mark the order FAILED and stop retrying. markOrderFailed is
+      // guarded + atomic, so it is safe that the worker's 'failed' handler also
+      // calls it (the second call is a no-op).
       await markOrderFailed(orderId, correlationId, error.message);
       throw new PermanentFulfillmentError(error.message);
     }
-    throw error; // transient (e.g. DB blip) → let BullMQ retry
+    // A concurrent attempt may have created the reservation first (P2002) — the
+    // transaction rolled back its own decrement, so a retry will see the reservation
+    // and skip it. Re-throw as transient.
+    throw error;
   }
 
-  await writeEvent(prisma, {
-    orderId,
-    type: OrderEventType.INVENTORY_RESERVED,
-    correlationId,
-    payload: { items: order.items.map((i) => ({ sku: i.sku, quantity: i.quantity })) },
-  });
+  // ---- Phase 3: invoice (once) + finalize to FULFILLED (atomic) -------------
+  try {
+    await prisma.$transaction(async (tx) => {
+      const existingInvoice = await tx.invoice.findUnique({ where: { orderId } });
+      if (shouldCreateInvoice(existingInvoice?.id)) {
+        const invoiceNumber = buildInvoiceNumber(orderId, new Date());
+        await tx.invoice.create({
+          data: { orderId, invoiceNumber, amount: order.totalAmount, status: InvoiceStatus.ISSUED },
+        });
+        await writeEvent(tx, {
+          orderId,
+          type: OrderEventType.INVOICE_GENERATED,
+          correlationId,
+          payload: { invoiceNumber, amount: order.totalAmount },
+        });
+      }
 
-  // ---- Generate invoice (only once per order) -------------------------------
-  const existingInvoice = await prisma.invoice.findUnique({ where: { orderId } });
-  if (shouldCreateInvoice(existingInvoice?.id)) {
-    const invoiceNumber = buildInvoiceNumber(orderId, new Date());
-    await prisma.invoice.create({
-      data: {
-        orderId,
-        invoiceNumber,
-        amount: order.totalAmount,
-        status: InvoiceStatus.ISSUED,
-      },
+      await tx.order.update({
+        where: { id: orderId },
+        data: { status: assertTransition(OrderStatus.FULFILLING, OrderStatus.FULFILLED) },
+      });
+      await writeEvent(tx, { orderId, type: OrderEventType.ORDER_FULFILLED, correlationId });
     });
-    await writeEvent(prisma, {
-      orderId,
-      type: OrderEventType.INVOICE_GENERATED,
-      correlationId,
-      payload: { invoiceNumber, amount: order.totalAmount },
-    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      const existing = await prisma.invoice.findUnique({ where: { orderId } });
+      if (existing) {
+        // A concurrent attempt won the finalize for THIS order. Benign: let a retry
+        // observe the FULFILLED status and no-op.
+        throw new Error('Concurrent finalize; a retry will reconcile', { cause: error });
+      }
+      // The invoice NUMBER is owned by a different order (an astronomically rare
+      // collision). Fail fast instead of retrying the same deterministic number
+      // forever.
+      throw new PermanentFulfillmentError(
+        `Invoice number collision for order ${orderId}; manual intervention required`,
+      );
+    }
+    throw error;
   }
-
-  // ---- Finalize -------------------------------------------------------------
-  await prisma.order.update({
-    where: { id: orderId },
-    data: { status: assertTransition(OrderStatus.FULFILLING, OrderStatus.FULFILLED) },
-  });
-  await writeEvent(prisma, {
-    orderId,
-    type: OrderEventType.ORDER_FULFILLED,
-    correlationId,
-  });
 
   log.info({ orderId }, 'Order fulfilled');
 }
 
 /**
- * Mark an order FAILED (only valid from FULFILLING) and record an order.failed
- * event. Safe to call when the order is already FAILED — it just skips the
- * transition so we never write a duplicate failure event.
+ * Mark an order FAILED. Atomic and guarded: it only transitions FULFILLING ->
+ * FAILED, and the order.failed event is written ONLY when that transition actually
+ * happened. This makes it safe to call more than once (a second call is a no-op)
+ * and stops it from recording a failure for an order that was never fulfilling.
  */
 export async function markOrderFailed(
   orderId: string,
   correlationId: string,
   message: string,
 ): Promise<void> {
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order || order.status === OrderStatus.FAILED) return;
-
-  if (order.status === OrderStatus.FULFILLING) {
-    await prisma.order.update({
-      where: { id: orderId },
+  await prisma.$transaction(async (tx) => {
+    const updated = await tx.order.updateMany({
+      where: { id: orderId, status: OrderStatus.FULFILLING },
       data: { status: OrderStatus.FAILED },
     });
-  }
+    if (updated.count === 0) return; // already failed/fulfilled, or never fulfilling
 
-  await writeEvent(prisma, {
-    orderId,
-    type: OrderEventType.ORDER_FAILED,
-    correlationId,
-    payload: { message },
+    await writeEvent(tx, {
+      orderId,
+      type: OrderEventType.ORDER_FAILED,
+      correlationId,
+      payload: { message },
+    });
   });
 }

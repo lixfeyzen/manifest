@@ -1,4 +1,5 @@
 import { prisma, type Order, type Prisma } from '@manifest/db';
+import { UnknownSkuError } from '@manifest/domain';
 import {
   OrderEventType,
   OrderStatus,
@@ -27,15 +28,22 @@ export async function createOrder(rawInput: CreateOrderInput): Promise<Order> {
   const inventory = await prisma.inventoryItem.findMany({ where: { sku: { in: skus } } });
   const bySku = new Map(inventory.map((item) => [item.sku, item]));
 
-  const lineItems = input.items.map((item) => {
-    const product = bySku.get(item.sku);
+  // Merge duplicate SKUs into one line each (summed quantity) so the order respects
+  // the OrderItem (orderId, sku) unique constraint and one-reservation-per-sku.
+  const quantityBySku = new Map<string, number>();
+  for (const item of input.items) {
+    quantityBySku.set(item.sku, (quantityBySku.get(item.sku) ?? 0) + item.quantity);
+  }
+
+  const lineItems = [...quantityBySku.entries()].map(([sku, quantity]) => {
+    const product = bySku.get(sku);
     if (!product) {
-      throw new Error(`Unknown SKU: ${item.sku}`);
+      throw new UnknownSkuError(sku);
     }
     return {
       sku: product.sku,
       name: product.name,
-      quantity: item.quantity,
+      quantity,
       unitPrice: product.unitPrice,
     };
   });
@@ -73,7 +81,7 @@ export async function createOrder(rawInput: CreateOrderInput): Promise<Order> {
   return full;
 }
 
-/** Include shape used whenever we return a "full" order to the API. */
+/** Include shape used whenever we return a "full" order (the detail view). */
 export const orderInclude = {
   items: true,
   payment: true,
@@ -82,11 +90,24 @@ export const orderInclude = {
   events: { orderBy: { createdAt: 'asc' } },
 } satisfies Prisma.OrderInclude;
 
-export async function getOrders(status?: OrderStatus) {
+/**
+ * Slim include for LIST views. The list only needs scalars plus the most recent
+ * event ("last event"), so we pull just one event instead of every event, payment,
+ * invoice and job for every row.
+ */
+export const orderListInclude = {
+  events: { orderBy: { createdAt: 'desc' }, take: 1 },
+} satisfies Prisma.OrderInclude;
+
+const MAX_ORDERS_PAGE = 100;
+
+/** Bounded, slim, time-ordered list of orders (newest first). */
+export async function getOrders(status?: OrderStatus, limit = 50) {
   return prisma.order.findMany({
     where: status ? { status } : undefined,
-    include: orderInclude,
+    include: orderListInclude,
     orderBy: { createdAt: 'desc' },
+    take: Math.min(Math.max(limit, 1), MAX_ORDERS_PAGE),
   });
 }
 

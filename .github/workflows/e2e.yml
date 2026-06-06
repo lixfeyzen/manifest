@@ -1,0 +1,83 @@
+name: E2E
+
+# Kept as a separate workflow from ci.yml so the main build/test badge is never
+# blocked by a browser-level flake. It boots the full stack (Postgres + Redis +
+# web + api + worker) and runs the Playwright journey, including the a11y checks.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: manifest
+          POSTGRES_PASSWORD: manifest
+          POSTGRES_DB: manifest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U manifest -d manifest"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      # The app processes read ../../.env via dotenv-cli. Web is fixed to port 3001
+      # (next dev -p 3001); the API runs on 4000 here.
+      - name: Write .env for the full stack
+        run: |
+          cat > .env <<'EOF'
+          DATABASE_URL=postgresql://manifest:manifest@localhost:5432/manifest?schema=public
+          REDIS_URL=redis://localhost:6379
+          API_PORT=4000
+          NEXT_PUBLIC_API_URL=http://localhost:4000
+          NODE_ENV=development
+          WEB_ORIGIN=http://localhost:3001
+          SESSION_SECRET=e2e-ci-session-secret-not-for-production
+          WEBHOOK_SECRET=e2e-ci-webhook-secret
+          EOF
+
+      - name: Apply migrations + seed demo data
+        run: |
+          pnpm --filter @manifest/db migrate:deploy
+          pnpm db:seed
+
+      - name: Install Playwright browser
+        run: pnpm --filter @manifest/e2e exec playwright install --with-deps chromium
+
+      - name: Run E2E (Playwright boots web + api + worker)
+        env:
+          E2E_BASE_URL: http://localhost:3001
+        run: pnpm test:e2e

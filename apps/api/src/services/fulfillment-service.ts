@@ -1,4 +1,5 @@
 import { prisma } from '@manifest/db';
+import { OrderNotFoundError } from '@manifest/domain';
 import {
   FULFILLMENT_JOB_OPTIONS,
   FulfillmentJobStatus,
@@ -44,7 +45,7 @@ export interface RetryResult {
 export async function retryFulfillment(orderId: string): Promise<RetryResult> {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) {
-    throw new Error(`Order not found: ${orderId}`);
+    throw new OrderNotFoundError(orderId);
   }
 
   if (order.status === OrderStatus.FULFILLED) {

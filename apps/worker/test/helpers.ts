@@ -27,10 +27,7 @@ export async function resetAndSeed(): Promise<void> {
  * Create an order already in PAID status (as it would be after a payment
  * webhook), ready for the worker to fulfill. Returns the created order.
  */
-export async function createPaidOrder(
-  sku: string,
-  quantity: number,
-): Promise<Order> {
+export async function createPaidOrder(sku: string, quantity: number): Promise<Order> {
   const inv = await prisma.inventoryItem.findUniqueOrThrow({ where: { sku } });
   return prisma.order.create({
     data: {

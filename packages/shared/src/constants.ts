@@ -33,16 +33,14 @@ export const FulfillmentJobStatus = {
   COMPLETED: 'COMPLETED',
   FAILED: 'FAILED',
 } as const;
-export type FulfillmentJobStatus =
-  (typeof FulfillmentJobStatus)[keyof typeof FulfillmentJobStatus];
+export type FulfillmentJobStatus = (typeof FulfillmentJobStatus)[keyof typeof FulfillmentJobStatus];
 
 export const ProcessedEventStatus = {
   PROCESSING: 'PROCESSING',
   PROCESSED: 'PROCESSED',
   FAILED: 'FAILED',
 } as const;
-export type ProcessedEventStatus =
-  (typeof ProcessedEventStatus)[keyof typeof ProcessedEventStatus];
+export type ProcessedEventStatus = (typeof ProcessedEventStatus)[keyof typeof ProcessedEventStatus];
 
 /**
  * Order event types written to the OrderEvent timeline.
@@ -65,10 +63,12 @@ export type OrderEventType = (typeof OrderEventType)[keyof typeof OrderEventType
 /** BullMQ queue name for fulfillment jobs. */
 export const FULFILLMENT_QUEUE_NAME = 'fulfillment';
 
-/** Retry policy for fulfillment jobs. */
+/** Retry policy for fulfillment jobs (plus bounded retention so Redis can't grow forever). */
 export const FULFILLMENT_JOB_OPTIONS = {
   attempts: 3,
   backoff: { type: 'exponential', delay: 1000 },
+  removeOnComplete: { count: 1000 },
+  removeOnFail: { count: 5000 },
 } as const;
 
 /**

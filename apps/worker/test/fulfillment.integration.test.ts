@@ -65,9 +65,9 @@ describe('fulfillment processor (worker integration)', () => {
   it('fails permanently and rolls back stock when stock is insufficient', async () => {
     const order = await createPaidOrder('SKU-HOODIE', 6); // only 5 in stock
 
-    await expect(
-      runFulfillment({ orderId: order.id, correlationId: 'corr_fail' }),
-    ).rejects.toThrow(/Insufficient stock/);
+    await expect(runFulfillment({ orderId: order.id, correlationId: 'corr_fail' })).rejects.toThrow(
+      /Insufficient stock/,
+    );
 
     const stock = await prisma.inventoryItem.findUnique({ where: { sku: 'SKU-HOODIE' } });
     expect(stock!.stock).toBe(5); // unchanged — transaction rolled back
@@ -75,5 +75,33 @@ describe('fulfillment processor (worker integration)', () => {
 
     const updated = await prisma.order.findUnique({ where: { id: order.id } });
     expect(updated!.status).toBe('FAILED');
+  });
+
+  it('never oversells when two orders race for the last unit of a SKU', async () => {
+    // Exactly one unit available; two paid orders each want it.
+    await prisma.inventoryItem.update({ where: { sku: 'SKU-HOODIE' }, data: { stock: 1 } });
+    const orderA = await createPaidOrder('SKU-HOODIE', 1);
+    const orderB = await createPaidOrder('SKU-HOODIE', 1);
+
+    const results = await Promise.allSettled([
+      runFulfillment({ orderId: orderA.id, correlationId: 'corr_race_a' }),
+      runFulfillment({ orderId: orderB.id, correlationId: 'corr_race_b' }),
+    ]);
+
+    // Exactly one fulfilled, one rejected with insufficient stock.
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    expect(results.filter((r) => r.status === 'rejected')).toHaveLength(1);
+
+    // Stock is exactly zero — the atomic guarded decrement made it impossible for
+    // both to take the same unit.
+    const stock = await prisma.inventoryItem.findUnique({ where: { sku: 'SKU-HOODIE' } });
+    expect(stock!.stock).toBe(0);
+
+    // One order FULFILLED, the other FAILED; exactly one reservation and one invoice.
+    const a = await prisma.order.findUnique({ where: { id: orderA.id } });
+    const b = await prisma.order.findUnique({ where: { id: orderB.id } });
+    expect([a!.status, b!.status].sort()).toEqual(['FAILED', 'FULFILLED']);
+    expect(await prisma.inventoryReservation.count()).toBe(1);
+    expect(await prisma.invoice.count()).toBe(1);
   });
 });
