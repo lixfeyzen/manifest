@@ -1,89 +1,38 @@
-import { AlertTriangle, CheckCircle2, Clock, CreditCard, Layers, type LucideIcon } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  Layers,
+  type LucideIcon,
+} from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ApiError } from '@/components/ApiError';
 import { AutoRefresh } from '@/components/AutoRefresh';
+import { Card, CardHeader } from '@/components/Card';
 import { MetricCard } from '@/components/MetricCard';
-import { OrdersChart, type ChartPoint } from '@/components/OrdersChart';
+import { OrdersChart } from '@/components/OrdersChart';
 import { Reveal } from '@/components/Reveal';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatCurrency, formatCustomerName, formatRelative } from '@/lib/format';
-import { fetchDashboardMetrics, fetchOrders } from '@/lib/queries.server';
-import type { OrderStatus } from '@/lib/types';
+import { formatCurrency, formatCustomerName, formatDateTime, formatRelative } from '@/lib/format';
+import { fetchDashboardMetrics, fetchOrders, fetchThroughput } from '@/lib/queries.server';
 
 export const dynamic = 'force-dynamic';
 
 const DAYS = 14;
-const dayKey = (d: Date) => d.toISOString().slice(0, 10);
-
-interface DayAgg {
-  pending: number;
-  paid: number;
-  fulfilling: number;
-  fulfilled: number;
-  failed: number;
-  total: number;
-  hasFailedJob: boolean;
-}
-const emptyDay = (): DayAgg => ({
-  pending: 0,
-  paid: 0,
-  fulfilling: 0,
-  fulfilled: 0,
-  failed: 0,
-  total: 0,
-  hasFailedJob: false,
-});
-const bucketOf = (s: OrderStatus): keyof Omit<DayAgg, 'total' | 'hasFailedJob'> =>
-  s === 'PENDING'
-    ? 'pending'
-    : s === 'PAID'
-      ? 'paid'
-      : s === 'FULFILLING'
-        ? 'fulfilling'
-        : s === 'FULFILLED'
-          ? 'fulfilled'
-          : 'failed';
 
 export default async function DashboardPage() {
   try {
-    const [metrics, orders] = await Promise.all([fetchDashboardMetrics(), fetchOrders()]);
-    const recent = orders.slice(0, 5);
+    // Three light queries instead of loading the whole orders table: counts, the
+    // five most recent orders (slim), and the per-day throughput (aggregated server-side).
+    const [metrics, recent, chart] = await Promise.all([
+      fetchDashboardMetrics(),
+      fetchOrders(undefined, 5),
+      fetchThroughput(DAYS),
+    ]);
 
-    // Aggregate real orders per day, segmented by fulfillment stage.
-    const byDay = new Map<string, DayAgg>();
-    for (const o of orders) {
-      const k = dayKey(new Date(o.createdAt));
-      const agg = byDay.get(k) ?? emptyDay();
-      agg[bucketOf(o.status)] += 1;
-      agg.total += 1;
-      if (o.status === 'FAILED' || o.fulfillmentJobs.some((j) => j.status === 'FAILED')) {
-        agg.hasFailedJob = true;
-      }
-      byDay.set(k, agg);
-    }
-
-    const today = new Date();
-    const todayK = dayKey(today);
-    const chart: ChartPoint[] = [];
-    for (let i = DAYS - 1; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      const k = dayKey(d);
-      const a = byDay.get(k) ?? emptyDay();
-      chart.push({
-        date: d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
-        today: k === todayK,
-        pending: a.pending,
-        paid: a.paid,
-        fulfilling: a.fulfilling,
-        fulfilled: a.fulfilled,
-        failed: a.failed,
-        total: a.total,
-        hasFailedJob: a.hasFailedJob,
-      });
-    }
-    const newToday = byDay.get(todayK)?.total ?? 0;
+    const newToday = chart.find((d) => d.today)?.total ?? 0;
     const fulfilledPct = metrics.totalOrders
       ? Math.round((metrics.fulfilledOrders / metrics.totalOrders) * 100)
       : 0;
@@ -92,34 +41,41 @@ export default async function DashboardPage() {
       label: string;
       value: number;
       icon: LucideIcon;
-      tone: 'violet' | 'amber' | 'blue' | 'emerald' | 'red';
-      hint?: { text: string; tone: 'good' | 'bad' | 'muted'; dir?: 'up' | 'down' };
+      hint: { text: string; tone: 'good' | 'bad' | 'muted' };
+      alert?: boolean;
     }> = [
       {
         label: 'Total orders',
         value: metrics.totalOrders,
         icon: Layers,
-        tone: 'violet',
         hint: {
-          text: `${newToday} today`,
+          text: newToday > 0 ? `+${newToday} today` : 'no new today',
           tone: newToday > 0 ? 'good' : 'muted',
-          dir: newToday > 0 ? 'up' : undefined,
         },
       },
-      { label: 'Pending', value: metrics.pendingOrders, icon: Clock, tone: 'amber' },
-      { label: 'Paid', value: metrics.paidOrders, icon: CreditCard, tone: 'blue' },
+      {
+        label: 'Pending',
+        value: metrics.pendingOrders,
+        icon: Clock,
+        hint: { text: 'awaiting payment', tone: 'muted' },
+      },
+      {
+        label: 'Paid',
+        value: metrics.paidOrders,
+        icon: CreditCard,
+        hint: { text: 'ready to fulfill', tone: 'muted' },
+      },
       {
         label: 'Fulfilled',
         value: metrics.fulfilledOrders,
         icon: CheckCircle2,
-        tone: 'emerald',
-        hint: { text: `${fulfilledPct}% of total`, tone: 'good' },
+        hint: { text: `${fulfilledPct}% of total`, tone: 'muted' },
       },
       {
         label: 'Failed jobs',
         value: metrics.failedJobs,
         icon: AlertTriangle,
-        tone: 'red',
+        alert: metrics.failedJobs > 0,
         hint:
           metrics.failedJobs > 0
             ? { text: 'needs attention', tone: 'bad' }
@@ -128,7 +84,7 @@ export default async function DashboardPage() {
     ];
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-brand-ink">Dashboard</h1>
@@ -140,39 +96,52 @@ export default async function DashboardPage() {
         </div>
 
         {/* KPI cards */}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {cards.map((c, i) => (
             <Reveal key={c.label} delay={i * 40}>
-              <MetricCard label={c.label} value={c.value} icon={c.icon} tone={c.tone} hint={c.hint} />
+              <MetricCard
+                label={c.label}
+                value={c.value}
+                icon={c.icon}
+                hint={c.hint}
+                alert={c.alert}
+              />
             </Reveal>
           ))}
         </div>
 
         {/* Chart */}
         <Reveal delay={220}>
-          <div className="rounded-xl border border-brand-border bg-brand-surface p-5 shadow-sm">
-            <div className="mb-3">
-              <h2 className="text-sm font-semibold text-brand-ink">Throughput</h2>
-              <p className="text-xs text-brand-muted">Last {DAYS} days</p>
+          <Card>
+            <CardHeader
+              title="Throughput"
+              action={<span className="text-xs text-brand-muted">Last {DAYS} days</span>}
+            />
+            <div className="p-5">
+              <OrdersChart data={chart} />
             </div>
-            <OrdersChart data={chart} />
-          </div>
+          </Card>
         </Reveal>
 
         {/* Recent orders */}
         <Reveal delay={280}>
-          <div className="rounded-xl border border-brand-border bg-brand-surface shadow-sm">
-            <div className="flex items-center justify-between border-b border-brand-border px-5 py-3.5">
-              <h2 className="text-sm font-semibold text-brand-ink">Recent orders</h2>
-              <Link href="/orders" className="text-sm text-brand-ink hover:text-brand-primary">
-                View all →
-              </Link>
-            </div>
+          <Card>
+            <CardHeader
+              title="Recent orders"
+              action={
+                <Link
+                  href="/orders"
+                  className="text-sm text-brand-muted transition-colors hover:text-brand-ink"
+                >
+                  View all
+                </Link>
+              }
+            />
             {recent.length === 0 ? (
               <p className="px-5 py-10 text-center text-sm text-brand-muted">
                 No orders yet.{' '}
                 <Link href="/orders/new" className="text-brand-primary">
-                  Create your first order
+                  Add a manual order
                 </Link>
                 .
               </p>
@@ -197,7 +166,10 @@ export default async function DashboardPage() {
                         <span className="w-24 text-right">
                           <StatusBadge status={order.status} />
                         </span>
-                        <span className="hidden w-20 text-right text-xs text-brand-muted sm:block">
+                        <span
+                          title={formatDateTime(order.createdAt)}
+                          className="hidden w-20 text-right text-xs text-brand-muted sm:block"
+                        >
                           {formatRelative(order.createdAt)}
                         </span>
                       </div>
@@ -206,7 +178,7 @@ export default async function DashboardPage() {
                 ))}
               </ul>
             )}
-          </div>
+          </Card>
         </Reveal>
       </div>
     );

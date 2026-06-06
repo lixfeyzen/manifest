@@ -71,13 +71,13 @@ export function OrderActions({
           onClick={() =>
             run('pay', async () => {
               const res = await sendPaymentWebhook({ orderId, amount });
-              return { kind: 'ok', text: `Webhook ${res.status} — ${res.message}` };
+              return { kind: 'ok', text: `Webhook ${res.status}: ${res.message}` };
             })
           }
-          className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-3.5 py-2 text-sm font-medium transition active:scale-[0.98] text-white hover:bg-brand-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-3.5 py-2 text-sm font-medium transition active:scale-[0.98] text-white hover:bg-brand-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-50"
         >
           {busy === 'pay' ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-          Simulate Payment Webhook
+          Send test payment
         </button>
 
         <button
@@ -87,14 +87,14 @@ export function OrderActions({
               const res = await sendPaymentWebhook({ orderId, amount, duplicate: true });
               return {
                 kind: res.status === 'ignored' ? 'info' : 'ok',
-                text: `Duplicate webhook ${res.status} — ${res.message}`,
+                text: `Duplicate webhook ${res.status}: ${res.message}`,
               };
             })
           }
-          className="inline-flex items-center gap-2 rounded-lg border border-brand-border bg-brand-surface px-3.5 py-2 text-sm font-medium transition active:scale-[0.98] text-brand-ink hover:bg-brand-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex items-center gap-2 rounded-lg border border-brand-border bg-brand-surface px-3.5 py-2 text-sm font-medium transition active:scale-[0.98] text-brand-ink hover:bg-brand-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-50"
         >
           {busy === 'dup' ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-          Simulate Duplicate Webhook
+          Resend payment (duplicate)
         </button>
 
         {canRetry && (
@@ -106,7 +106,7 @@ export function OrderActions({
                 return { kind: res.ok ? 'ok' : 'err', text: res.message };
               })
             }
-            className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-sm font-medium transition active:scale-[0.98] text-amber-700 hover:bg-amber-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-sm font-medium transition active:scale-[0.98] text-amber-700 hover:bg-amber-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy === 'retry' ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -119,7 +119,12 @@ export function OrderActions({
       </div>
 
       {/* Toasts */}
-      <div className="pointer-events-none fixed bottom-5 right-5 z-50 flex w-80 flex-col gap-2">
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="pointer-events-none fixed bottom-5 right-5 z-50 flex w-80 flex-col gap-2"
+      >
         {toasts.map((t) => {
           const Icon = t.kind === 'ok' ? CheckCircle2 : t.kind === 'info' ? Info : AlertCircle;
           const color =

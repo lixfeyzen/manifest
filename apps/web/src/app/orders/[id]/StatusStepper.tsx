@@ -19,10 +19,12 @@ const ORDER = ['PENDING', 'PAID', 'FULFILLING', 'FULFILLED'];
  */
 export function StatusStepper({ status }: { status: OrderStatus }) {
   const failed = status === 'FAILED';
+  // The state machine only allows FULFILLING -> FAILED, so a failed order always
+  // died at the Fulfilling step (index 2).
   const currentIdx = failed ? 2 : ORDER.indexOf(status);
 
   return (
-    <ol key={status} className="flex items-center">
+    <ol key={status} aria-label="Order progress" className="flex items-center">
       {STEPS.map((step, i) => {
         const done = !failed && i <= currentIdx;
         const doneBeforeFail = failed && i < currentIdx;
@@ -41,7 +43,11 @@ export function StatusStepper({ status }: { status: OrderStatus }) {
         const connectorFilled = i < currentIdx && !failedHere;
 
         return (
-          <li key={step.key} className="flex flex-1 items-center last:flex-none">
+          <li
+            key={step.key}
+            aria-current={isCurrent ? 'step' : undefined}
+            className="flex flex-1 items-center last:flex-none"
+          >
             <div className="flex flex-col items-center gap-1.5">
               <span
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold ${circle}`}
@@ -61,6 +67,11 @@ export function StatusStepper({ status }: { status: OrderStatus }) {
               >
                 {step.label}
               </span>
+              {(failedHere || isCurrent || isComplete) && (
+                <span className="sr-only">
+                  {failedHere ? 'failed at this step' : isCurrent ? 'current step' : 'completed'}
+                </span>
+              )}
             </div>
             {i < STEPS.length - 1 && (
               <span className="relative mx-2 mb-5 h-0.5 flex-1 overflow-hidden rounded bg-brand-border">

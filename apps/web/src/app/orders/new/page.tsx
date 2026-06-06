@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/Button';
+import { Card } from '@/components/Card';
+import { Input, Label, Select } from '@/components/Field';
 import { formatCurrency } from '@/lib/format';
 import { createOrder, fetchInventory } from '@/lib/queries';
 import type { InventoryItem } from '@/lib/types';
@@ -14,6 +17,7 @@ export default function NewOrderPage() {
   const [quantity, setQuantity] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadingInv, setLoadingInv] = useState(true);
 
   useEffect(() => {
     fetchInventory()
@@ -21,7 +25,8 @@ export default function NewOrderPage() {
         setInventory(items);
         if (items[0]) setSku(items[0].sku);
       })
-      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load inventory'));
+      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load inventory'))
+      .finally(() => setLoadingInv(false));
   }, []);
 
   const selected = inventory.find((i) => i.sku === sku);
@@ -41,88 +46,90 @@ export default function NewOrderPage() {
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
+    <div className="mx-auto max-w-xl space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-brand-ink">New order</h1>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-muted">
+          Back-office order
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-brand-ink">
+          New manual order
+        </h1>
         <p className="mt-1 text-sm text-brand-muted">
-          Create an order from seeded inventory. It starts as <strong>PENDING</strong> until a
-          payment webhook arrives.
+          Record an order on a customer&apos;s behalf (phone or wholesale). It starts as{' '}
+          <strong>PENDING</strong> until a payment webhook arrives.
         </p>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-5 rounded-xl border border-brand-border bg-brand-surface p-6 shadow-sm"
-      >
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-brand-ink">
-            Customer email
-          </label>
-          <input
-            id="email"
-            type="email"
-            required
-            placeholder="name@company.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-md border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-ink focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
-          />
-        </div>
+      <Card className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <Label htmlFor="email">Customer email</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              placeholder="name@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 w-full"
+            />
+          </div>
 
-        <div>
-          <label htmlFor="product" className="block text-sm font-medium text-brand-ink">
-            Product
-          </label>
-          <select
-            id="product"
-            value={sku}
-            onChange={(e) => setSku(e.target.value)}
-            className="mt-1 w-full rounded-md border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-ink focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
-          >
-            {inventory.map((item) => (
-              <option key={item.sku} value={item.sku}>
-                {item.name} ({item.sku}) — {formatCurrency(item.unitPrice)} · {item.stock} in stock
-              </option>
-            ))}
-          </select>
-        </div>
+          <div>
+            <Label htmlFor="product">Product</Label>
+            <Select
+              id="product"
+              value={sku}
+              disabled={loadingInv}
+              onChange={(e) => setSku(e.target.value)}
+              className="mt-1 w-full"
+            >
+              {loadingInv ? (
+                <option>Loading products…</option>
+              ) : (
+                inventory.map((item) => (
+                  <option key={item.sku} value={item.sku}>
+                    {item.name} ({item.sku}) {formatCurrency(item.unitPrice)}, {item.stock} in stock
+                  </option>
+                ))
+              )}
+            </Select>
+          </div>
 
-        <div>
-          <label htmlFor="quantity" className="block text-sm font-medium text-brand-ink">
-            Quantity
-          </label>
-          <input
-            id="quantity"
-            type="number"
-            min={1}
-            required
-            value={quantity}
-            onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-            className="mt-1 w-32 rounded-md border border-brand-border bg-brand-surface px-3 py-2 text-sm text-brand-ink focus:border-brand-primary focus:outline-none focus:ring-1 focus:ring-brand-primary"
-          />
-        </div>
+          <div>
+            <Label htmlFor="quantity">Quantity</Label>
+            <Input
+              id="quantity"
+              name="quantity"
+              type="number"
+              min={1}
+              required
+              value={quantity}
+              onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+              className="mt-1 w-32"
+            />
+          </div>
 
-        <div className="flex items-center justify-between border-t border-brand-border pt-4">
-          <span className="text-sm text-brand-muted">Total</span>
-          <span className="text-lg font-semibold tabular-nums text-brand-ink">
-            {formatCurrency(total)}
-          </span>
-        </div>
+          <div className="flex items-center justify-between border-t border-brand-border pt-4">
+            <span className="text-sm text-brand-muted">Total</span>
+            <span className="font-mono text-lg font-semibold tabular-nums text-brand-ink">
+              {formatCurrency(total)}
+            </span>
+          </div>
 
-        {error && (
-          <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-700 ring-1 ring-inset ring-red-500/20">
-            {error}
-          </p>
-        )}
+          {error && (
+            <p className="rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-700 ring-1 ring-inset ring-red-500/20">
+              {error}
+            </p>
+          )}
 
-        <button
-          type="submit"
-          disabled={submitting || !sku}
-          className="w-full rounded-md bg-brand-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-primary-dark disabled:opacity-50"
-        >
-          {submitting ? 'Creating…' : 'Create order'}
-        </button>
-      </form>
+          <Button type="submit" disabled={submitting || !sku || loadingInv} className="w-full">
+            {submitting ? 'Creating…' : 'Create order'}
+          </Button>
+        </form>
+      </Card>
     </div>
   );
 }

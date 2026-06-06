@@ -1,6 +1,6 @@
 export default function OrdersLoading() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="h-9 w-32 animate-pulse rounded-lg bg-brand-surface-2" />
       <div className="flex gap-5 border-b border-brand-border pb-2">
         {Array.from({ length: 6 }).map((_, i) => (

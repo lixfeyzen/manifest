@@ -55,7 +55,15 @@ export async function sendPaymentWebhook(params: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
   });
-  return (await res.json()) as { status: string; message: string };
+  const json = (await res.json().catch(() => ({}))) as {
+    status?: string;
+    message?: string;
+    error?: string;
+  };
+  if (!res.ok) {
+    throw new Error(json.error ?? json.message ?? `Webhook request failed (${res.status})`);
+  }
+  return { status: json.status ?? 'ok', message: json.message ?? '' };
 }
 
 // --- Auth (REST) ------------------------------------------------------------
@@ -66,7 +74,7 @@ export interface AuthUser {
 }
 
 async function authRequest(
-  path: '/auth/login' | '/auth/register',
+  path: '/auth/login',
   body: { email: string; password: string },
 ): Promise<AuthUser> {
   const res = await fetch(`${API_URL}${path}`, {
@@ -82,9 +90,8 @@ async function authRequest(
   return json.user!;
 }
 
-export const login = (email: string, password: string) => authRequest('/auth/login', { email, password });
-export const register = (email: string, password: string) =>
-  authRequest('/auth/register', { email, password });
+export const login = (email: string, password: string) =>
+  authRequest('/auth/login', { email, password });
 
 export async function logout(): Promise<void> {
   await fetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' });

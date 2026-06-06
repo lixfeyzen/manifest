@@ -4,8 +4,9 @@ import { LogoutButton } from './LogoutButton';
 import { MobileNav } from './MobileNav';
 
 /**
- * Slim top bar. On mobile: hamburger (drawer) + brand (the sidebar is hidden).
- * On desktop: a context label. Always: the signed-in user + sign-out.
+ * Slim top bar. On mobile it carries the hamburger (drawer) + brand, since the
+ * sidebar is hidden there. On desktop the sidebar carries identity, so the bar
+ * just holds the signed-in user + sign-out on the right.
  */
 export function Topbar({ email }: { email: string }) {
   return (
@@ -19,7 +20,12 @@ export function Topbar({ email }: { email: string }) {
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="hidden text-sm text-brand-muted sm:inline">{email}</span>
+        <span className="hidden items-center gap-2 sm:flex">
+          <span className="rounded bg-brand-surface-2 px-1.5 py-0.5 text-[11px] font-medium text-brand-muted">
+            Operator
+          </span>
+          <span className="text-sm text-brand-muted">{email}</span>
+        </span>
         <LogoutButton />
       </div>
     </header>

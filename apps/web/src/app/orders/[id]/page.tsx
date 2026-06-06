@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { ApiError } from '@/components/ApiError';
 import { AutoRefresh } from '@/components/AutoRefresh';
+import { Card } from '@/components/Card';
 import { CopyButton } from '@/components/CopyButton';
 import { JobStatusBadge, StatusBadge } from '@/components/StatusBadge';
 import {
@@ -9,6 +10,7 @@ import {
   formatCustomerName,
   formatDateTime,
   formatRelative,
+  formatStatus,
   shortId,
 } from '@/lib/format';
 import { fetchOrder } from '@/lib/queries.server';
@@ -35,7 +37,10 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <Link href="/orders" className="text-sm text-brand-muted transition-colors hover:text-brand-ink">
+        <Link
+          href="/orders"
+          className="text-sm text-brand-muted transition-colors hover:text-brand-ink"
+        >
           ← Orders
         </Link>
         <AutoRefresh />
@@ -57,12 +62,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             </p>
             <p className="text-sm text-brand-muted">
               {order.customerEmail} ·{' '}
-              <span title={formatDateTime(order.createdAt)}>created {formatRelative(order.createdAt)}</span>
+              <span title={formatDateTime(order.createdAt)}>
+                created {formatRelative(order.createdAt)}
+              </span>
             </p>
           </div>
           <div className="text-right">
             <p className="text-xs text-brand-muted">Total</p>
-            <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight text-brand-ink">
+            <p className="mt-0.5 font-mono text-2xl font-semibold tabular-nums tracking-tight text-brand-ink">
               {formatCurrency(order.totalAmount)}
             </p>
           </div>
@@ -73,7 +80,17 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         </div>
 
         <div className="mt-7">
-          <OrderActions orderId={order.id} amount={order.totalAmount} status={order.status} />
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-muted">
+            Pipeline controls
+          </p>
+          <div className="mt-2">
+            <OrderActions orderId={order.id} amount={order.totalAmount} status={order.status} />
+          </div>
+          <p className="mt-2 max-w-prose text-xs text-brand-muted">
+            Operator controls to drive the payment-to-fulfillment pipeline. A duplicate payment is
+            safely ignored (one invoice, never two), and a failed order can be retried without
+            double-charging or double-shipping.
+          </p>
         </div>
       </div>
 
@@ -114,10 +131,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <Eyebrow>Payment</Eyebrow>
               {order.payment ? (
                 <dl className="mt-4 space-y-2.5 text-sm">
-                  <Row label="Status" value={order.payment.status} />
+                  <Row label="Status" value={formatStatus(order.payment.status)} />
                   <Row label="Amount" value={formatCurrency(order.payment.amount)} />
                   <Row label="Event id" value={order.payment.providerEventId} mono />
-                  <Row label="Received" value={formatRelative(order.payment.createdAt)} />
+                  <Row
+                    label="Received"
+                    value={formatRelative(order.payment.createdAt)}
+                    title={formatDateTime(order.payment.createdAt)}
+                  />
                 </dl>
               ) : (
                 <Empty>Awaiting payment webhook.</Empty>
@@ -129,8 +150,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 <dl className="mt-4 space-y-2.5 text-sm">
                   <Row label="Number" value={order.invoice.invoiceNumber} mono />
                   <Row label="Amount" value={formatCurrency(order.invoice.amount)} />
-                  <Row label="Status" value={order.invoice.status} />
-                  <Row label="Issued" value={formatRelative(order.invoice.createdAt)} />
+                  <Row label="Status" value={formatStatus(order.invoice.status)} />
+                  <Row
+                    label="Issued"
+                    value={formatRelative(order.invoice.createdAt)}
+                    title={formatDateTime(order.invoice.createdAt)}
+                  />
                 </dl>
               ) : (
                 <Empty>Issued during fulfillment.</Empty>
@@ -154,7 +179,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                     {latestJob.lastError}
                   </div>
                 )}
-                <Row label="Updated" value={formatRelative(latestJob.updatedAt)} />
+                <Row
+                  label="Updated"
+                  value={formatRelative(latestJob.updatedAt)}
+                  title={formatDateTime(latestJob.updatedAt)}
+                />
               </dl>
             ) : (
               <Empty>No fulfillment job yet — created after payment.</Empty>
@@ -163,12 +192,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         </div>
 
         {/* Activity — the one framed block */}
-        <div className="rounded-xl border border-brand-border bg-brand-surface p-5 shadow-sm">
+        <Card className="p-5">
           <Eyebrow>Activity</Eyebrow>
           <div className="mt-4">
             <Timeline events={order.events} />
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
@@ -185,15 +214,29 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-muted">{children}</p>
+    <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-muted">
+      {children}
+    </p>
   );
 }
 
-function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Row({
+  label,
+  value,
+  mono,
+  title,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  title?: string;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-4">
       <dt className="text-brand-muted">{label}</dt>
-      <dd className={`text-right text-brand-ink ${mono ? 'font-mono text-xs' : ''}`}>{value}</dd>
+      <dd title={title} className={`text-right text-brand-ink ${mono ? 'font-mono text-xs' : ''}`}>
+        {value}
+      </dd>
     </div>
   );
 }

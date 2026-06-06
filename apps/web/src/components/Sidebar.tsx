@@ -30,7 +30,7 @@ export function Sidebar() {
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-brand-border bg-brand-surface lg:flex">
       <div className="flex h-16 items-center border-b border-brand-border px-5">
-        <Wordmark />
+        <Wordmark subtitle="Fulfillment Operations" />
       </div>
 
       <nav className="flex-1 space-y-1 p-3">
@@ -44,6 +44,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={active ? 'page' : undefined}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 active
                   ? 'bg-brand-surface-2 text-brand-ink'
