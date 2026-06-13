@@ -11,10 +11,14 @@ import {
   registerUser,
 } from '../services/auth-service.js';
 
+const isProd = env.NODE_ENV === 'production';
 const cookieOptions = {
   httpOnly: true,
-  sameSite: 'lax' as const,
-  secure: env.NODE_ENV === 'production',
+  // The web and API can be deployed on different sites; a cross-site credentialed
+  // request only carries the cookie with SameSite=None (which requires Secure). In
+  // dev we stay on Lax over http, where None+Secure is impossible. (See ADR 004.)
+  sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
+  secure: isProd,
   path: '/',
   signed: true,
   maxAge: SESSION_TTL_SECONDS,

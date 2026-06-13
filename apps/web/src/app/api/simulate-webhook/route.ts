@@ -1,7 +1,13 @@
 import { createHmac } from 'node:crypto';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
-const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET ?? 'dev-webhook-secret-change-me';
+// Never sign with a hardcoded secret in production. In dev we allow a throwaway default
+// for convenience (the API independently refuses that constant in prod, see env.ts), but
+// a production deploy missing WEBHOOK_SECRET must fail loudly rather than sign with a
+// publicly-known value.
+const WEBHOOK_SECRET =
+  process.env.WEBHOOK_SECRET ??
+  (process.env.NODE_ENV === 'production' ? undefined : 'dev-webhook-secret-change-me');
 
 /**
  * Stands in for the payment provider. Runs on the Next server (so the signing
@@ -19,6 +25,13 @@ export async function POST(request: Request): Promise<Response> {
   const meData = (await me.json().catch(() => ({}))) as { user?: unknown };
   if (!me.ok || !meData.user) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (!WEBHOOK_SECRET) {
+    return Response.json(
+      { error: 'Server misconfigured: WEBHOOK_SECRET is not set' },
+      { status: 500 },
+    );
   }
 
   let parsed: { orderId?: unknown; amount?: unknown; duplicate?: unknown };
