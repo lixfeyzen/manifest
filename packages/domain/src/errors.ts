@@ -61,3 +61,15 @@ export class OrderNotFoundError extends DomainError {
     this.name = 'OrderNotFoundError';
   }
 }
+
+/** Thrown when a payment webhook's amount does not cover the order's total. */
+export class PaymentAmountMismatchError extends DomainError {
+  constructor(paid: number, expected: number) {
+    super(
+      'PAYMENT_AMOUNT_MISMATCH',
+      `Payment amount ${paid} does not cover order total ${expected}`,
+      false,
+    );
+    this.name = 'PaymentAmountMismatchError';
+  }
+}

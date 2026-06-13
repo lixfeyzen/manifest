@@ -4,6 +4,7 @@ import {
   WEBHOOK_IGNORED,
   WEBHOOK_PROCESSED,
   type WebhookResult,
+  assertPaymentCoversOrder,
   assertTransition,
   decideIdempotency,
 } from '@manifest/domain';
@@ -40,13 +41,10 @@ export async function processPaymentWebhook(input: PaymentWebhookInput): Promise
     throw new OrderNotFoundError(input.orderId);
   }
 
-  // Always record that we received the webhook (business rule: full timeline).
-  await writeEvent(prisma, {
-    orderId: order.id,
-    type: OrderEventType.PAYMENT_WEBHOOK_RECEIVED,
-    correlationId: input.correlationId,
-    payload: { eventId: input.eventId, idempotencyKey: input.idempotencyKey, amount: input.amount },
-  });
+  // The payment must cover the server-priced order total (orders are priced from
+  // inventory at creation, never by the caller). An underpaid or zero-amount webhook is
+  // refused here rather than shipping full goods and booking a full-value invoice.
+  assertPaymentCoversOrder(input.amount, order.totalAmount);
 
   // Idempotency gate: have we already processed this exact event?
   const existing = await prisma.processedEvent.findUnique({
@@ -65,6 +63,21 @@ export async function processPaymentWebhook(input: PaymentWebhookInput): Promise
     return WEBHOOK_IGNORED;
   }
 
+  // A genuinely new event (fresh idempotencyKey) for an order that is already past
+  // PENDING — e.g. a provider re-notification under a new key. The order is already
+  // settled, so record it and return ignored (2xx) instead of letting the PENDING->PAID
+  // transition throw and surface to the provider as a retryable 500.
+  if (order.status !== OrderStatus.PENDING) {
+    log.info({ status: order.status }, 'Payment for already-settled order ignored');
+    await writeEvent(prisma, {
+      orderId: order.id,
+      type: OrderEventType.DUPLICATE_EVENT_IGNORED,
+      correlationId: input.correlationId,
+      payload: { idempotencyKey: input.idempotencyKey, reason: 'already_settled' },
+    });
+    return WEBHOOK_IGNORED;
+  }
+
   // New event: do the core state change atomically.
   const jobId = fulfillmentJobId(order.id);
   try {
@@ -77,6 +90,20 @@ export async function processPaymentWebhook(input: PaymentWebhookInput): Promise
           idempotencyKey: input.idempotencyKey,
           providerEventId: input.eventId,
           status: ProcessedEventStatus.PROCESSING,
+        },
+      });
+
+      // Record receipt as part of the same atomic claim. Writing it here (rather than
+      // before the idempotency gate) means a replayed duplicate no longer appends a
+      // fresh RECEIVED row, and a concurrent loser's RECEIVED rolls back with its tx.
+      await writeEvent(tx, {
+        orderId: order.id,
+        type: OrderEventType.PAYMENT_WEBHOOK_RECEIVED,
+        correlationId: input.correlationId,
+        payload: {
+          eventId: input.eventId,
+          idempotencyKey: input.idempotencyKey,
+          amount: input.amount,
         },
       });
 

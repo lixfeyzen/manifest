@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify';
 import { paymentWebhookSchema } from '@manifest/shared';
 import { env } from '../env.js';
-import { OrderNotFoundError } from '@manifest/domain';
+import { OrderNotFoundError, PaymentAmountMismatchError } from '@manifest/domain';
 import { processPaymentWebhook } from '../services/webhook-service.js';
 
 /**
@@ -61,6 +61,11 @@ export const webhookRoutes: FastifyPluginAsync = async (app) => {
     } catch (error) {
       if (error instanceof OrderNotFoundError) {
         return reply.status(404).send({ error: error.message });
+      }
+      if (error instanceof PaymentAmountMismatchError) {
+        // Client error: the provider sent an amount that doesn't cover the order. 422 is
+        // not retryable, so a misconfigured provider won't loop against us.
+        return reply.status(422).send({ error: error.message });
       }
       req.log.error({ err: error }, 'Failed to process payment webhook');
       return reply.status(500).send({ error: 'Internal server error' });

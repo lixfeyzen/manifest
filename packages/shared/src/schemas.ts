@@ -24,7 +24,7 @@ export const paymentWebhookSchema = z.object({
   eventId: z.string().min(1, 'eventId is required'),
   orderId: z.string().min(1, 'orderId is required'),
   type: z.literal('payment.succeeded'),
-  amount: z.number().int().nonnegative('amount must be a non-negative integer'),
+  amount: z.number().int().positive('amount must be a positive integer'),
   idempotencyKey: z.string().min(1, 'idempotencyKey is required'),
   correlationId: z.string().min(1, 'correlationId is required'),
 });
