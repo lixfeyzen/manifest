@@ -44,5 +44,9 @@ export default defineConfig({
     url: WEB_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
+    // Surface the stack's boot logs in CI so a failed start is diagnosable
+    // instead of an opaque "Exit code: N".
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
 });
