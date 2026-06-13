@@ -32,8 +32,20 @@ export async function reconcileStuckOrders(queue: Queue<FulfillmentJobData>): Pr
     select: { id: true, status: true },
     take: 25,
   });
+  if (stuck.length === 0) return;
+
+  // Don't double-enqueue: an order with a job already in flight (waiting, running, or
+  // backing-off in `delayed`) is being worked on, not stranded. Only a TRUE crash gap
+  // — committed PAID/FULFILLING with NO live job — needs re-enqueueing. This also stops
+  // the sweep from re-selecting an order it just re-enqueued (the new job is now live),
+  // which previously let FulfillmentJob rows and a duplicate job pile up every 60s.
+  const liveJobs = await queue.getJobs(['waiting', 'active', 'delayed']);
+  const ordersWithLiveJob = new Set(
+    liveJobs.map((j) => j?.data?.orderId).filter((id): id is string => Boolean(id)),
+  );
 
   for (const o of stuck) {
+    if (ordersWithLiveJob.has(o.id)) continue;
     // Fresh job id: a stuck FULFILLING order's original deterministic job may be
     // retained as failed/exhausted, so re-adding that id would be deduped away.
     const reconcileJobId = `${fulfillmentJobId(o.id)}-reconcile-${Date.now()}`;

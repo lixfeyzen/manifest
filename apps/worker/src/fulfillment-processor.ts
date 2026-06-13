@@ -1,7 +1,6 @@
 import { Prisma, prisma } from '@manifest/db';
 import {
   InsufficientStockError,
-  assertTransition,
   buildInvoiceNumber,
   decideFulfillment,
   shouldCreateInvoice,
@@ -69,10 +68,16 @@ export async function runFulfillment(rawData: FulfillmentJobData): Promise<void>
   // fulfillment.started event is written at most once.
   if (action.kind === 'start') {
     await prisma.$transaction(async (tx) => {
-      await tx.order.update({
-        where: { id: orderId },
-        data: { status: assertTransition(order.status as OrderStatus, OrderStatus.FULFILLING) },
+      // Guarded transition: the WHERE clause makes the live DB row the precondition
+      // (not the status we read earlier), so two concurrent jobs can't both apply it.
+      // If another worker already advanced this order, count is 0 — skip the event and
+      // resume in Phase 2/3 rather than re-writing a started event or demoting a
+      // terminal status. This mirrors the guarded markOrderFailed below.
+      const moved = await tx.order.updateMany({
+        where: { id: orderId, status: { in: [OrderStatus.PAID, OrderStatus.FAILED] } },
+        data: { status: OrderStatus.FULFILLING },
       });
+      if (moved.count === 0) return;
       await writeEvent(tx, {
         orderId,
         type: OrderEventType.FULFILLMENT_STARTED,
@@ -150,10 +155,17 @@ export async function runFulfillment(rawData: FulfillmentJobData): Promise<void>
         });
       }
 
-      await tx.order.update({
-        where: { id: orderId },
-        data: { status: assertTransition(OrderStatus.FULFILLING, OrderStatus.FULFILLED) },
+      // Guarded finalize: only FULFILLING -> FULFILLED, enforced by the WHERE clause so
+      // a concurrent job (e.g. a parallel reconcile/retry) can never resurrect an order
+      // that was meanwhile FAILED into FULFILLED. count 0 => the status changed under us;
+      // roll back (dropping any invoice written above) and let a retry re-derive it.
+      const finalized = await tx.order.updateMany({
+        where: { id: orderId, status: OrderStatus.FULFILLING },
+        data: { status: OrderStatus.FULFILLED },
       });
+      if (finalized.count === 0) {
+        throw new Error('Order is no longer FULFILLING; concurrent transition, will retry');
+      }
       await writeEvent(tx, { orderId, type: OrderEventType.ORDER_FULFILLED, correlationId });
     });
   } catch (error) {
@@ -164,9 +176,10 @@ export async function runFulfillment(rawData: FulfillmentJobData): Promise<void>
         // observe the FULFILLED status and no-op.
         throw new Error('Concurrent finalize; a retry will reconcile', { cause: error });
       }
-      // The invoice NUMBER is owned by a different order (an astronomically rare
-      // collision). Fail fast instead of retrying the same deterministic number
-      // forever.
+      // The invoice NUMBER is owned by a different order. Invoice numbers are derived
+      // from the FULL order UUID (see buildInvoiceNumber), so distinct orders cannot
+      // produce the same number — this branch is effectively unreachable and exists
+      // only as a fail-fast guard rather than retrying a deterministic number forever.
       throw new PermanentFulfillmentError(
         `Invoice number collision for order ${orderId}; manual intervention required`,
       );

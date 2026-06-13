@@ -17,6 +17,9 @@ import {
 import { reconcileStuckOrders } from './reconcile.js';
 
 const connection = new IORedis(env.REDIS_URL, { maxRetriesPerRequest: null });
+// ioredis emits 'error' on connection blips; with no listener the event throws and
+// can crash the consumer on a recoverable hiccup. Log and let ioredis reconnect.
+connection.on('error', (err) => logger.error({ err }, 'Redis connection error'));
 
 /**
  * The fulfillment worker (queue consumer). It runs the domain fulfillment logic
@@ -94,11 +97,16 @@ worker.on('ready', () => {
   logger.info(`Manifest worker ready, consuming "${FULFILLMENT_QUEUE_NAME}" queue`);
 });
 
+// BullMQ's Worker emits 'error' on internal run-loop / connection failures. Without a
+// listener the event throws and can take down the durable consumer; log it instead.
+worker.on('error', (err) => logger.error({ err }, 'Worker error'));
+
 // --- Reconciliation sweeper -------------------------------------------------
 // The crash-gap recovery (reconcileStuckOrders) lives in ./reconcile.ts so it can
 // be unit-tested with an injected queue. The timer below also sweeps expired
 // sessions and finalizes ProcessedEvent rows a crash left stuck in PROCESSING.
 const fulfillmentQueue = new Queue<FulfillmentJobData>(FULFILLMENT_QUEUE_NAME, { connection });
+fulfillmentQueue.on('error', (err) => logger.error({ err }, 'Fulfillment queue error'));
 
 const RECONCILE_INTERVAL_MS = 60_000;
 const STALE_PROCESSING_MS = 5 * 60_000;
@@ -139,3 +147,14 @@ async function shutdown(signal: string): Promise<void> {
 
 process.on('SIGINT', () => void shutdown('SIGINT'));
 process.on('SIGTERM', () => void shutdown('SIGTERM'));
+
+// Last-resort process guards so a stray rejection / exception is logged rather than
+// crashing the durable consumer silently (jobs persist in Redis/Postgres and resume on
+// restart). Mirrors apps/api/src/index.ts.
+process.on('unhandledRejection', (reason) => {
+  logger.error({ err: reason }, 'Unhandled promise rejection');
+});
+process.on('uncaughtException', (error) => {
+  logger.error({ err: error }, 'Uncaught exception');
+  process.exit(1);
+});
