@@ -8,7 +8,7 @@ import { expect, test } from '@playwright/test';
 test('create -> pay -> fulfilled -> duplicate ignored', async ({ page }) => {
   // 1. Create an order.
   await page.goto('/orders/new');
-  await expect(page.getByRole('heading', { name: 'New order' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'New manual order' })).toBeVisible();
 
   await page.getByLabel('Customer email').fill('noah.carter@gmail.com');
   await page.getByLabel('Product').selectOption('SKU-STICKER');
@@ -20,7 +20,7 @@ test('create -> pay -> fulfilled -> duplicate ignored', async ({ page }) => {
   await expect(page.getByText('Pending', { exact: true })).toBeVisible();
 
   // 3. Simulate the payment webhook.
-  await page.getByRole('button', { name: 'Simulate Payment Webhook' }).click();
+  await page.getByRole('button', { name: 'Send test payment' }).click();
 
   // 4. The worker fulfills asynchronously; the page refreshes itself. The invoice
   //    number only exists once the order reaches FULFILLED, so wait on that.
@@ -32,7 +32,7 @@ test('create -> pay -> fulfilled -> duplicate ignored', async ({ page }) => {
     .first()
     .textContent();
 
-  await page.getByRole('button', { name: 'Simulate Duplicate Webhook' }).click();
+  await page.getByRole('button', { name: 'Resend payment (duplicate)' }).click();
   await expect(page.getByText(/ignored/i)).toBeVisible({ timeout: 10_000 });
 
   // 6. Still exactly one invoice with the same number: no duplicate created.
