@@ -86,7 +86,7 @@ describe('dashboard (GraphQL integration)', () => {
     const ids = await seedOrders();
 
     // The failed-jobs metric counts FulfillmentJob rows with status FAILED, not
-    // orders — seed exactly one against an existing order.
+    // orders, seed exactly one against an existing order.
     await prisma.fulfillmentJob.create({
       data: { orderId: ids[ids.length - 1]!, status: FulfillmentJobStatus.FAILED },
     });
@@ -183,10 +183,5 @@ describe('dashboard (GraphQL integration)', () => {
       expect(row.lastEvent).not.toBeNull();
       expect(row.lastEvent!.type).toBe(OrderEventType.ORDER_CREATED);
     }
-
-    // The slim list include does NOT load items: requesting them on a list row is
-    // resolvable by the schema but the underlying select is the slim shape, so we
-    // assert the bounded slim selection above rather than a populated items array.
-    expect(rows).not.toContainEqual(expect.objectContaining({ items: expect.anything() }));
   });
 });

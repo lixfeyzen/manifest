@@ -18,7 +18,7 @@ import { typeDefs } from './schema.js';
  * Yoga needs to read the raw request body itself, but Fastify's default JSON
  * parser would consume it first. Fastify content-type parsers are *encapsulated*
  * per plugin scope, so the no-op parser added here only affects the /graphql
- * route — the REST webhook in the parent scope keeps its normal JSON parsing.
+ * route, the REST webhook in the parent scope keeps its normal JSON parsing.
  */
 export const graphqlPlugin: FastifyPluginAsync = async (app) => {
   const yoga = createYoga<{ req: FastifyRequest; reply: FastifyReply }>({
@@ -60,17 +60,20 @@ export const graphqlPlugin: FastifyPluginAsync = async (app) => {
   app.route({
     url: '/graphql',
     method: ['GET', 'POST', 'OPTIONS'],
-    // Require a valid session for GraphQL operations. In development the GET that
-    // serves the GraphiQL explorer HTML is allowed through so the tool still loads.
+    // Require a valid session for GraphQL operations. In development only the
+    // parameterless GET that serves the GraphiQL explorer HTML is allowed through
+    // so the tool still loads, a GET carrying a query still requires a session
+    // (graphql-yoga executes queries sent over GET).
     //
     // Authorization model: Manifest is a single-operator / staff ops console, so
     // every authenticated staff member is intentionally allowed to see and act on
-    // ALL orders (a shared fulfillment queue) — authentication is authorization
+    // ALL orders (a shared fulfillment queue): authentication is authorization
     // here. A per-user ownership model would be wrong for this domain. See
     // docs/adr/005-authorization.md.
     preHandler: async (req, reply) => {
       if (req.method === 'OPTIONS') return;
-      if (isDev && req.method === 'GET') return;
+      if (isDev && req.method === 'GET' && !(req.query as { query?: string } | undefined)?.query)
+        return;
       const user = await getUserBySessionToken(readSessionToken(req));
       if (!user) {
         return reply.status(401).send({ errors: [{ message: 'Unauthorized' }] });

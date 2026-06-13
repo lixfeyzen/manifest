@@ -5,7 +5,7 @@ function shimmer(extra = '') {
 export default function DashboardLoading() {
   return (
     <div className="space-y-8">
-      {/* Header — mirror the real title + subtitle + Live pill so there's no jump */}
+      {/* Header: mirror the real title + subtitle + Live pill so there's no jump */}
       <div className="flex items-start justify-between">
         <div className="space-y-2">
           <div className={shimmer('h-7 w-40')} />
@@ -14,7 +14,7 @@ export default function DashboardLoading() {
         <div className={shimmer('h-4 w-14 rounded-full')} />
       </div>
 
-      {/* KPI cards — must match the resolved grid exactly (gap-3, rounded-lg, p-4) */}
+      {/* KPI cards: must match the resolved grid exactly (gap-3, rounded-lg, p-4) */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="rounded-lg border border-brand-border bg-brand-surface p-4">

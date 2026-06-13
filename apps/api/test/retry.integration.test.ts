@@ -31,7 +31,7 @@ describe('retryFulfillment (GraphQL integration)', () => {
     await resetAndSeed();
     // GraphQL requires a session; register a fresh user and reuse its cookie.
     cookie = await authCookie(app);
-    // retryFulfillment enqueues a fulfillment job — clear any leftovers first.
+    // retryFulfillment enqueues a fulfillment job, clear any leftovers first.
     await fulfillmentQueue.obliterate({ force: true });
   });
 

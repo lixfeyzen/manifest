@@ -1,5 +1,6 @@
 import { Prisma, prisma } from '@manifest/db';
 import {
+  OrderNotFoundError,
   WEBHOOK_IGNORED,
   WEBHOOK_PROCESSED,
   type WebhookResult,
@@ -18,14 +19,6 @@ import {
 import { withCorrelation } from '../logger.js';
 import { enqueueFulfillment } from './fulfillment-service.js';
 import { writeEvent } from './event-service.js';
-
-/** Raised when the webhook references an order that does not exist. */
-export class OrderNotFoundError extends Error {
-  constructor(orderId: string) {
-    super(`Order not found: ${orderId}`);
-    this.name = 'OrderNotFoundError';
-  }
-}
 
 /**
  * Process an incoming payment webhook (Flow 2).
@@ -78,7 +71,7 @@ export async function processPaymentWebhook(input: PaymentWebhookInput): Promise
     await prisma.$transaction(async (tx) => {
       // Claim this event first. The unique constraint on idempotencyKey means a
       // concurrent duplicate request will fail here (P2002) and be treated as a
-      // duplicate below — this is what makes the gate race-safe.
+      // duplicate below: this is what makes the gate race-safe.
       await tx.processedEvent.create({
         data: {
           idempotencyKey: input.idempotencyKey,

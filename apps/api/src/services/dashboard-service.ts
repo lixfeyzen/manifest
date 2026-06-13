@@ -54,7 +54,7 @@ const segmentOf = (status: string): 'pending' | 'paid' | 'fulfilling' | 'fulfill
 /**
  * Per-day order counts (segmented by status) for the throughput chart. Computed in
  * the API by selecting only (createdAt, status) within the window and aggregating
- * in memory — far lighter than shipping every full order to the web layer.
+ * in memory: far lighter than shipping every full order to the web layer.
  */
 export async function getOrderThroughput(days: number): Promise<ThroughputDay[]> {
   const n = Math.min(Math.max(Math.trunc(days), 1), 90);

@@ -9,7 +9,7 @@ const config: Config = {
         mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
       },
       colors: {
-        // Clean light theme — white cards on near-white, violet used sparingly.
+        // Clean light theme: white cards on near-white, violet used sparingly.
         brand: {
           bg: '#F7F8FA', // app background (near-white)
           surface: '#FFFFFF', // cards / panels

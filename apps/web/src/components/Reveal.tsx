@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 /**
  * Plays a one-time rise/fade entrance on initial mount only. Because a client
  * component instance is preserved (reconciled, not remounted) across a Server
- * Component `router.refresh()`, the effect runs once — so the dashboard's 3s
+ * Component `router.refresh()`, the effect runs once, so the dashboard's 3s
  * auto-refresh never re-triggers the animation. Reduced-motion is handled by the
  * global CSS kill-switch (duration collapses to ~0, snapping to final state).
  */

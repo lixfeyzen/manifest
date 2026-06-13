@@ -1,6 +1,5 @@
 export * from './errors.js';
 export * from './order-status.js';
 export * from './fulfillment.js';
-export * from './inventory.js';
 export * from './invoice.js';
 export * from './idempotency.js';

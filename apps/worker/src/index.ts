@@ -2,12 +2,9 @@ import { Queue, UnrecoverableError, Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { prisma } from '@manifest/db';
 import {
-  FULFILLMENT_JOB_OPTIONS,
   FULFILLMENT_QUEUE_NAME,
   FulfillmentJobStatus,
-  OrderStatus,
   ProcessedEventStatus,
-  fulfillmentJobId,
   type FulfillmentJobData,
 } from '@manifest/shared';
 import { env } from './env.js';
@@ -17,6 +14,7 @@ import {
   markOrderFailed,
   runFulfillment,
 } from './fulfillment-processor.js';
+import { reconcileStuckOrders } from './reconcile.js';
 
 const connection = new IORedis(env.REDIS_URL, { maxRetriesPerRequest: null });
 
@@ -40,7 +38,7 @@ const worker = new Worker<FulfillmentJobData>(
       await runFulfillment(job.data);
     } catch (error) {
       if (error instanceof PermanentFulfillmentError) {
-        // Tell BullMQ not to retry — this failure will never succeed.
+        // Tell BullMQ not to retry: this failure will never succeed.
         throw new UnrecoverableError(error.message);
       }
       throw error;
@@ -93,49 +91,22 @@ worker.on('failed', async (job, error) => {
 });
 
 worker.on('ready', () => {
-  logger.info(`Manifest worker ready — consuming "${FULFILLMENT_QUEUE_NAME}" queue`);
+  logger.info(`Manifest worker ready, consuming "${FULFILLMENT_QUEUE_NAME}" queue`);
 });
 
 // --- Reconciliation sweeper -------------------------------------------------
-// Closes the crash window between the webhook committing (order PAID, job row
-// QUEUED) and the job actually being enqueued to Redis. If the API died in that
-// gap, the order would be PAID with no BullMQ job and never fulfill. This sweep
-// periodically re-enqueues any order left PAID for too long. Re-adding the
-// deterministic job id is a no-op when a job already exists, and runFulfillment is
-// idempotent, so re-enqueueing is always safe.
+// The crash-gap recovery (reconcileStuckOrders) lives in ./reconcile.ts so it can
+// be unit-tested with an injected queue. The timer below also sweeps expired
+// sessions and finalizes ProcessedEvent rows a crash left stuck in PROCESSING.
 const fulfillmentQueue = new Queue<FulfillmentJobData>(FULFILLMENT_QUEUE_NAME, { connection });
 
 const RECONCILE_INTERVAL_MS = 60_000;
-const STUCK_AFTER_MS = 60_000;
 const STALE_PROCESSING_MS = 5 * 60_000;
 
-async function reconcileStuckOrders(): Promise<void> {
-  const cutoff = new Date(Date.now() - STUCK_AFTER_MS);
-  // PAID = the commit/enqueue crash gap; FULFILLING = a worker crash between phases.
-  // The decideFulfillment 'continue' path makes re-running a FULFILLING order safe
-  // and idempotent, so re-enqueueing recovers it.
-  const stuck = await prisma.order.findMany({
-    where: {
-      status: { in: [OrderStatus.PAID, OrderStatus.FULFILLING] },
-      updatedAt: { lt: cutoff },
-    },
-    select: { id: true, status: true },
-    take: 25,
-  });
-  for (const o of stuck) {
-    // Fresh job id: a stuck FULFILLING order's original job may be retained as
-    // failed/exhausted, and re-adding its deterministic id would be deduped away.
-    await fulfillmentQueue.add(
-      'fulfill',
-      { orderId: o.id, correlationId: `reconcile_${o.id}` },
-      { jobId: `${fulfillmentJobId(o.id)}-reconcile-${Date.now()}`, ...FULFILLMENT_JOB_OPTIONS },
-    );
-    logger.warn({ orderId: o.id, status: o.status }, 'Reconciled a stuck order (re-enqueued)');
-  }
-}
-
 const reconcileTimer = setInterval(() => {
-  void reconcileStuckOrders().catch((err) => logger.error({ err }, 'Reconcile sweep failed'));
+  void reconcileStuckOrders(fulfillmentQueue).catch((err) =>
+    logger.error({ err }, 'Reconcile sweep failed'),
+  );
   // Opportunistically delete expired sessions so the table can't grow unbounded.
   void prisma.session
     .deleteMany({ where: { expiresAt: { lt: new Date() } } })

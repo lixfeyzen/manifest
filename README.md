@@ -1,6 +1,7 @@
 # Manifest
 
 [![CI](https://github.com/lixfeyzen/manifest/actions/workflows/ci.yml/badge.svg)](https://github.com/lixfeyzen/manifest/actions/workflows/ci.yml)
+[![E2E](https://github.com/lixfeyzen/manifest/actions/workflows/e2e.yml/badge.svg)](https://github.com/lixfeyzen/manifest/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Node](https://img.shields.io/badge/Node-%3E%3D20-339933?logo=node.js&logoColor=white)
@@ -116,7 +117,7 @@ The full write-up is in [docs/architecture.md](docs/architecture.md).
 
 ## Running it locally
 
-You will need Node 20 or newer, pnpm 9 or newer, and Docker.
+You will need Node 20 or newer, pnpm 9 or newer, and Docker. There is no hosted demo: the app needs Postgres, Redis and a separate worker process, so it runs locally with Docker Compose.
 
 ```bash
 # 1. Install dependencies
@@ -189,20 +190,19 @@ Authorization is intentionally flat: Manifest is a single-operator ops console, 
 
 ## Sending a webhook by hand
 
+The webhook is HMAC-signed, exactly as a real payment provider would sign it: the `x-manifest-signature` header must be the SHA256 HMAC of the raw request body, keyed by `WEBHOOK_SECRET` from your `.env` (export it in your shell first). Sign one `BODY` variable and send that same variable so the bytes match.
+
 ```bash
+BODY='{"eventId":"evt_001","orderId":"<ORDER_ID>","type":"payment.succeeded","amount":120000,"idempotencyKey":"payment_<ORDER_ID>_demo","correlationId":"corr_001"}'
+SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" | awk '{print $2}')
+
 curl -X POST http://localhost:4000/webhooks/payment \
   -H "Content-Type: application/json" \
-  -d '{
-    "eventId": "evt_001",
-    "orderId": "<ORDER_ID>",
-    "type": "payment.succeeded",
-    "amount": 120000,
-    "idempotencyKey": "payment_<ORDER_ID>_demo",
-    "correlationId": "corr_001"
-  }'
+  -H "x-manifest-signature: $SIG" \
+  -d "$BODY"
 ```
 
-Send the same `idempotencyKey` a second time and the API replies with `{"status":"ignored"}` without touching anything.
+Send the same `idempotencyKey` a second time (re-run both commands) and the API replies with `{"status":"ignored","message":"Duplicate event ignored safely"}` without touching anything. The dashboard's "Send test payment" button does this signing for you.
 
 ---
 
@@ -217,6 +217,8 @@ The interesting failures are the ones that never show up on the happy path. Each
 | Stock is never oversold                                      | Two orders race for the last unit in inventory                              | An atomic guarded update (`stock >= qty` in the `WHERE`), so the database refuses to go negative                     | `apps/worker/test/fulfillment.integration.test.ts` (race for the last unit) |
 | A retry never double-reserves or double-bills                | A worker crashes after reserving stock but before finishing                 | Unique `(orderId, sku)` reservation and one invoice per order; a resumed job respects existing reservations          | `fulfillment.integration.test.ts` (resuming an interrupted order)           |
 | A failed job fails cleanly, not forever                      | Insufficient stock or a transient error                                     | Bounded BullMQ retries, then a permanent failure that rolls back stock                                               | `apps/worker/test/worker-queue.integration.test.ts`                         |
+| A transient failure retries, then succeeds                   | A blip (a DB hiccup or network glitch) should not fail an order             | A plain error triggers bounded BullMQ backoff; the retry runs the idempotent fulfillment to completion              | `apps/worker/test/worker-retry.integration.test.ts`                         |
+| A lost or stuck job is recovered                             | The API commits the order but crashes before enqueuing the job              | A reconciliation sweep re-queues orders left paid or fulfilling past a cutoff, with a fresh job id                  | `apps/worker/test/reconcile.integration.test.ts`                            |
 | Forged webhooks are rejected                                 | A public endpoint invites spoofing                                          | HMAC-SHA256 verified (constant-time) before the body is parsed                                                       | `webhook-validation.integration.test.ts`                                    |
 
 A reconciliation sweep re-queues orders that have been paid or fulfilling for too long, so a lost job never leaves an order stuck. A single correlation id ties every step together across the API, queue and worker.

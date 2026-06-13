@@ -12,7 +12,7 @@ const HINT: Record<HintTone, string> = {
 // icon, a confident mono number, and a subline that EVERY card carries so the row
 // stays perfectly even. Colour is reserved for meaning only: an `alert` card tints
 // red, and the subline reads good / bad / muted. No per-card decorative colours,
-// no drop shadow — structure comes from a hairline border.
+// no drop shadow: structure comes from a hairline border.
 export function MetricCard({
   label,
   value,

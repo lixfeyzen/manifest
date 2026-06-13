@@ -2,11 +2,12 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify';
 import { paymentWebhookSchema } from '@manifest/shared';
 import { env } from '../env.js';
-import { OrderNotFoundError, processPaymentWebhook } from '../services/webhook-service.js';
+import { OrderNotFoundError } from '@manifest/domain';
+import { processPaymentWebhook } from '../services/webhook-service.js';
 
 /**
  * Verify the `x-manifest-signature` header is a valid HMAC-SHA256 of the raw
- * request body using the shared secret — i.e. the event genuinely came from our
+ * request body using the shared secret: i.e. the event genuinely came from our
  * "payment provider" and was not forged or tampered with. Timing-safe compare.
  */
 function hasValidSignature(req: FastifyRequest): boolean {

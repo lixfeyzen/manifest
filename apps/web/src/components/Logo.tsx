@@ -1,5 +1,5 @@
 /**
- * Manifest logomark — an abstract "ascending flow" (two stacked chevrons): an
+ * Manifest logomark: an abstract "ascending flow" (two stacked chevrons): an
  * order moving forward through the pipeline to fulfilled. Geometric, scalable,
  * and not a letter-in-a-box. Uses currentColor so callers set the tint.
  */

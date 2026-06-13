@@ -13,7 +13,7 @@ import { writeEvent } from './event-service.js';
 
 /**
  * Add a fulfillment job to the queue. The API only enqueues; apps/worker consumes.
- * `jobId` is deterministic for the first attempt (`fulfillment:<orderId>`), which
+ * `jobId` is deterministic for the first attempt (`fulfillment-<orderId>`), which
  * makes BullMQ deduplicate accidental double-enqueues for the same order.
  */
 export async function enqueueFulfillment(
@@ -39,7 +39,7 @@ export interface RetryResult {
  * Manually retry fulfillment for an order (GraphQL mutation).
  *
  * A FULFILLED order is a safe no-op. Otherwise we (re)queue a fulfillment job
- * with a fresh job id — BullMQ will not re-run a completed/failed job that shares
+ * with a fresh job id: BullMQ will not re-run a completed/failed job that shares
  * the original deterministic id, so the retry needs its own id.
  */
 export async function retryFulfillment(orderId: string): Promise<RetryResult> {

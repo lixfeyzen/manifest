@@ -19,7 +19,6 @@
     "seed": "dotenv -e ../../.env -- tsx prisma/seed.ts",
     "studio": "dotenv -e ../../.env -- prisma studio",
     "reset": "dotenv -e ../../.env -- prisma migrate reset --force",
-    "lint": "echo \"(no lint configured)\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

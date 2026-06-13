@@ -3,7 +3,7 @@
 import { type ReactElement, cloneElement, isValidElement, useId } from 'react';
 
 /**
- * Lightweight CSS tooltip — shows on hover and keyboard focus. The label is
+ * Lightweight CSS tooltip: shows on hover and keyboard focus. The label is
  * associated with the trigger via aria-describedby so assistive tech announces
  * it (WAI-ARIA tooltip pattern). No dependency.
  */

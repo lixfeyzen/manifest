@@ -127,7 +127,7 @@ describe('worker queue layer (BullMQ retry/permanent semantics)', () => {
     expect(updated!.status).toBe('FAILED');
 
     const stock = await prisma.inventoryItem.findUnique({ where: { sku: 'SKU-HOODIE' } });
-    expect(stock!.stock).toBe(5); // unchanged — the reserve transaction rolled back
+    expect(stock!.stock).toBe(5); // unchanged: the reserve transaction rolled back
 
     expect(await prisma.inventoryReservation.count({ where: { orderId: order.id } })).toBe(0);
   }, 20000);

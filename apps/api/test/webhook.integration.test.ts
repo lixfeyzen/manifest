@@ -151,7 +151,7 @@ describe('payment webhook (REST integration)', () => {
 
     // Fire two identical webhooks at the same time. One must win the ProcessedEvent
     // claim; the other must lose (either the unique-constraint race or the gate) and
-    // be recorded as a duplicate — never a second payment/job.
+    // be recorded as a duplicate, never a second payment/job.
     const [a, b] = await Promise.all([
       postWebhook(order.id, 'corr_race_a'),
       postWebhook(order.id, 'corr_race_b'),

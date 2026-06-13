@@ -8,7 +8,7 @@ import { OrderNotFulfillableError } from './errors.js';
  */
 export type FulfillmentAction =
   | { kind: 'noop'; reason: 'already_fulfilled' }
-  | { kind: 'start'; from: OrderStatus } // needs PAID/FAILED → FULFILLING transition
+  | { kind: 'start'; from: OrderStatus } // needs PAID/FAILED -> FULFILLING transition
   | { kind: 'continue' }; // already FULFILLING, resume idempotently
 
 export function decideFulfillment(status: OrderStatus): FulfillmentAction {
@@ -24,14 +24,4 @@ export function decideFulfillment(status: OrderStatus): FulfillmentAction {
     default:
       throw new OrderNotFulfillableError(status);
   }
-}
-
-/** True only when an order has been paid for and is therefore eligible to fulfill. */
-export function canBeFulfilled(status: OrderStatus): boolean {
-  return (
-    status === OrderStatus.PAID ||
-    status === OrderStatus.FULFILLING ||
-    status === OrderStatus.FAILED ||
-    status === OrderStatus.FULFILLED
-  );
 }

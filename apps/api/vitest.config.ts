@@ -5,7 +5,7 @@ export default defineConfig({
     environment: 'node',
     include: ['test/**/*.test.ts'],
     globalSetup: ['./test/global-setup.ts'],
-    // Integration tests share one test database — run files serially.
+    // Integration tests share one test database: run files serially.
     fileParallelism: false,
     hookTimeout: 30000,
     testTimeout: 30000,

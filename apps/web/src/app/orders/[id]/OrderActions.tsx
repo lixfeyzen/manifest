@@ -1,8 +1,9 @@
 'use client';
 
-import { AlertCircle, CheckCircle2, Info, Loader2, RefreshCw } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info, Loader2 } from 'lucide-react';
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { buttonStyles } from '@/components/Button';
 import { retryFulfillment, sendPaymentWebhook } from '@/lib/queries';
 import type { OrderStatus } from '@/lib/types';
 
@@ -74,7 +75,7 @@ export function OrderActions({
               return { kind: 'ok', text: `Webhook ${res.status}: ${res.message}` };
             })
           }
-          className="inline-flex items-center gap-2 rounded-lg bg-brand-primary px-3.5 py-2 text-sm font-medium transition active:scale-[0.98] text-white hover:bg-brand-primary-dark focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-50"
+          className={`${buttonStyles('primary')} active:scale-[0.98]`}
         >
           {busy === 'pay' ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           Send test payment
@@ -91,7 +92,7 @@ export function OrderActions({
               };
             })
           }
-          className="inline-flex items-center gap-2 rounded-lg border border-brand-border bg-brand-surface px-3.5 py-2 text-sm font-medium transition active:scale-[0.98] text-brand-ink hover:bg-brand-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary disabled:cursor-not-allowed disabled:opacity-50"
+          className={`${buttonStyles('secondary')} active:scale-[0.98]`}
         >
           {busy === 'dup' ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           Resend payment (duplicate)
@@ -106,14 +107,10 @@ export function OrderActions({
                 return { kind: res.ok ? 'ok' : 'err', text: res.message };
               })
             }
-            className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-sm font-medium transition active:scale-[0.98] text-amber-700 hover:bg-amber-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-medium transition-colors active:scale-[0.98] text-amber-700 hover:bg-amber-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {busy === 'retry' ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-            Retry Fulfillment
+            {busy === 'retry' ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            Retry fulfillment
           </button>
         )}
       </div>

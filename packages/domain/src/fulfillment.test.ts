@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { OrderStatus } from '@manifest/shared';
-import { canBeFulfilled, decideFulfillment } from './fulfillment.js';
+import { decideFulfillment } from './fulfillment.js';
 import { OrderNotFulfillableError } from './errors.js';
 
 describe('decideFulfillment', () => {
@@ -31,15 +31,5 @@ describe('decideFulfillment', () => {
 
   it('refuses to fulfill an unpaid (PENDING) order', () => {
     expect(() => decideFulfillment(OrderStatus.PENDING)).toThrow(OrderNotFulfillableError);
-  });
-});
-
-describe('canBeFulfilled', () => {
-  it('is false for unpaid orders', () => {
-    expect(canBeFulfilled(OrderStatus.PENDING)).toBe(false);
-  });
-
-  it('is true once an order is paid', () => {
-    expect(canBeFulfilled(OrderStatus.PAID)).toBe(true);
   });
 });

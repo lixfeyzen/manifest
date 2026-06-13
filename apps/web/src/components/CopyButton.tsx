@@ -19,7 +19,7 @@ export function CopyButton({ value, ariaLabel = 'Copy' }: { value: string; ariaL
             setCopied(true);
             setTimeout(() => setCopied(false), 1200);
           } catch {
-            /* clipboard unavailable — no-op */
+            /* clipboard unavailable: no-op */
           }
         }}
         className="inline-flex h-6 w-6 items-center justify-center rounded-md text-brand-muted transition-colors hover:bg-brand-surface-2 hover:text-brand-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-primary"

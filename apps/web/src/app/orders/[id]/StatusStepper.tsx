@@ -14,8 +14,8 @@ const ORDER = ['PENDING', 'PAID', 'FULFILLING', 'FULFILLED'];
 
 /**
  * Horizontal lifecycle stepper. Connector fill sweeps and check icons pop; the
- * `key={status}` makes a real advance (e.g. PAID→FULFILLING) replay just the new
- * segment — a live transition moment, not noise. Static under reduced motion.
+ * `key={status}` makes a real advance (e.g. PAID -> FULFILLING) replay just the new
+ * segment: a live transition moment, not noise. Static under reduced motion.
  */
 export function StatusStepper({ status }: { status: OrderStatus }) {
   const failed = status === 'FAILED';

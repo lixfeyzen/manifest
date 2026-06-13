@@ -127,7 +127,7 @@ export async function runFulfillment(rawData: FulfillmentJobData): Promise<void>
       await markOrderFailed(orderId, correlationId, error.message);
       throw new PermanentFulfillmentError(error.message);
     }
-    // A concurrent attempt may have created the reservation first (P2002) — the
+    // A concurrent attempt may have created the reservation first (P2002): the
     // transaction rolled back its own decrement, so a retry will see the reservation
     // and skip it. Re-throw as transient.
     throw error;
@@ -178,10 +178,12 @@ export async function runFulfillment(rawData: FulfillmentJobData): Promise<void>
 }
 
 /**
- * Mark an order FAILED. Atomic and guarded: it only transitions FULFILLING ->
+ * Mark an order FAILED. Atomic and guarded: it transitions PAID or FULFILLING ->
  * FAILED, and the order.failed event is written ONLY when that transition actually
- * happened. This makes it safe to call more than once (a second call is a no-op)
- * and stops it from recording a failure for an order that was never fulfilling.
+ * happened. Covering PAID matters because a job can exhaust its retries before
+ * Phase 1 ever moves the order to FULFILLING; without it such an order would be
+ * stuck PAID. Safe to call more than once (a second call is a no-op) and it never
+ * touches a PENDING or already-terminal order.
  */
 export async function markOrderFailed(
   orderId: string,
@@ -190,10 +192,10 @@ export async function markOrderFailed(
 ): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const updated = await tx.order.updateMany({
-      where: { id: orderId, status: OrderStatus.FULFILLING },
+      where: { id: orderId, status: { in: [OrderStatus.PAID, OrderStatus.FULFILLING] } },
       data: { status: OrderStatus.FAILED },
     });
-    if (updated.count === 0) return; // already failed/fulfilled, or never fulfilling
+    if (updated.count === 0) return; // already failed/fulfilled, or still pending
 
     await writeEvent(tx, {
       orderId,

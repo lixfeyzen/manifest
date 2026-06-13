@@ -2,7 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, type LucideIcon, PlusCircle, ShoppingCart } from 'lucide-react';
+import {
+  BookOpen,
+  LayoutDashboard,
+  type LucideIcon,
+  PlusCircle,
+  ShoppingCart,
+} from 'lucide-react';
 import { Wordmark } from './Logo';
 
 export interface NavItem {
@@ -14,12 +20,14 @@ export interface NavItem {
 export const NAV: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/orders', label: 'Orders', icon: ShoppingCart },
-  { href: '/orders/new', label: 'New Order', icon: PlusCircle },
+  { href: '/orders/new', label: 'New order', icon: PlusCircle },
+  { href: '/how-it-works', label: 'How it works', icon: BookOpen },
 ];
 
 export function isNavActive(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/';
   if (href === '/orders/new') return pathname === '/orders/new';
+  if (href === '/how-it-works') return pathname === '/how-it-works';
   // Orders matches /orders and /orders/[id], but not /orders/new.
   return pathname.startsWith('/orders') && pathname !== '/orders/new';
 }

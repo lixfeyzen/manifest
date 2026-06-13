@@ -151,7 +151,7 @@ export default async function DashboardPage() {
                   <li key={order.id}>
                     <Link
                       href={`/orders/${order.id}`}
-                      className="relative flex items-center justify-between px-5 py-3 transition-colors duration-150 before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:origin-center before:scale-y-0 before:bg-brand-primary before:transition-transform before:duration-150 hover:bg-brand-surface-2 hover:before:scale-y-100"
+                      className="relative flex items-center justify-between px-5 py-3 transition-colors duration-150 hover:bg-brand-surface-2"
                     >
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-brand-ink">

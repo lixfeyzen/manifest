@@ -87,7 +87,7 @@ export default function NewOrderPage() {
               className="mt-1 w-full"
             >
               {loadingInv ? (
-                <option>Loading products…</option>
+                <option>Loading products...</option>
               ) : (
                 inventory.map((item) => (
                   <option key={item.sku} value={item.sku}>
@@ -126,7 +126,7 @@ export default function NewOrderPage() {
           )}
 
           <Button type="submit" disabled={submitting || !sku || loadingInv} className="w-full">
-            {submitting ? 'Creating…' : 'Create order'}
+            {submitting ? 'Creating...' : 'Create order'}
           </Button>
         </form>
       </Card>

@@ -27,10 +27,10 @@ Hal paling penting: paket ini **pure** dan **dependency-free**.
 Sepanjang section ini kita akan terus menyinggung **siklus hidup pesanan (order lifecycle)**:
 
 ```
-PENDING ─▶ PAID ─▶ FULFILLING ─▶ FULFILLED
-                       │
-                       ▼
-                     FAILED ─▶ FULFILLING   (retry manual)
+PENDING -> PAID -> FULFILLING -> FULFILLED
+                       |
+                       v
+                     FAILED -> FULFILLING   (retry manual)
 ```
 
 Artinya: pesanan dibuat (PENDING), lalu dibayar (PAID), lalu mulai diproses/dikirim (FULFILLING), lalu selesai (FULFILLED). Kalau proses gagal di tengah jalan, statusnya jadi FAILED dan bisa dicoba ulang.
@@ -192,7 +192,7 @@ Pertama, didefinisikan dulu bentuk keputusan yang mungkin:
 ```ts
 export type FulfillmentAction =
   | { kind: 'noop'; reason: 'already_fulfilled' }
-  | { kind: 'start'; from: OrderStatus } // perlu transisi PAID/FAILED → FULFILLING
+  | { kind: 'start'; from: OrderStatus } // perlu transisi PAID/FAILED -> FULFILLING
   | { kind: 'continue' }; // sudah FULFILLING, lanjutkan secara idempoten
 ```
 
@@ -1247,7 +1247,7 @@ try {
 }
 
 if (action.kind === 'noop') {
-  log.info({ orderId }, 'Order already fulfilled — no-op');
+  log.info({ orderId }, 'Order already fulfilled, no-op');
   return;
 }
 ```
@@ -1287,7 +1287,7 @@ await prisma.$transaction(async (tx) => {
   const reservedSkus = new Set(existing.map((r) => r.sku));
 
   for (const item of order.items) {
-    if (reservedSkus.has(item.sku)) continue; // sudah direservasi → lewati
+    if (reservedSkus.has(item.sku)) continue; // sudah direservasi -> lewati
 
     const inv = await tx.inventoryItem.findUnique({ where: { sku: item.sku } });
     if (!inv) throw new InsufficientStockError(item.sku, item.quantity, 0);
@@ -1324,7 +1324,7 @@ Ini bagian paling rawan, dan paling cermat dirancang. Pecah per bagian:
     await markOrderFailed(orderId, correlationId, error.message);
     throw new PermanentFulfillmentError(error.message);
   }
-  throw error; // transient (mis. DB blip) → biarkan BullMQ retry
+  throw error; // transient (mis. DB blip) -> biarkan BullMQ retry
 }
 ```
 
@@ -1369,7 +1369,7 @@ await writeEvent(prisma, { orderId, type: OrderEventType.ORDER_FULFILLED, correl
 ```ts
 export async function markOrderFailed(orderId, correlationId, message): Promise<void> {
   const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order || order.status === OrderStatus.FAILED) return; // sudah FAILED → diam
+  if (!order || order.status === OrderStatus.FAILED) return; // sudah FAILED -> diam
 
   if (order.status === OrderStatus.FULFILLING) {
     await prisma.order.update({ where: { id: orderId }, data: { status: OrderStatus.FAILED } });

@@ -54,7 +54,7 @@ describe('fulfillment processor (worker integration)', () => {
     await runFulfillment({ orderId: order.id, correlationId: 'corr_resume' });
 
     const stock = await prisma.inventoryItem.findUnique({ where: { sku: 'SKU-COFFEE' } });
-    expect(stock!.stock).toBe(16); // NOT 12 — the existing reservation was respected
+    expect(stock!.stock).toBe(16); // NOT 12: the existing reservation was respected
     expect(await prisma.inventoryReservation.count({ where: { orderId: order.id } })).toBe(1);
     expect(await prisma.invoice.count({ where: { orderId: order.id } })).toBe(1);
 
@@ -70,7 +70,7 @@ describe('fulfillment processor (worker integration)', () => {
     );
 
     const stock = await prisma.inventoryItem.findUnique({ where: { sku: 'SKU-HOODIE' } });
-    expect(stock!.stock).toBe(5); // unchanged — transaction rolled back
+    expect(stock!.stock).toBe(5); // unchanged: transaction rolled back
     expect(await prisma.inventoryReservation.count({ where: { orderId: order.id } })).toBe(0);
 
     const updated = await prisma.order.findUnique({ where: { id: order.id } });
@@ -92,7 +92,7 @@ describe('fulfillment processor (worker integration)', () => {
     expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
     expect(results.filter((r) => r.status === 'rejected')).toHaveLength(1);
 
-    // Stock is exactly zero — the atomic guarded decrement made it impossible for
+    // Stock is exactly zero: the atomic guarded decrement made it impossible for
     // both to take the same unit.
     const stock = await prisma.inventoryItem.findUnique({ where: { sku: 'SKU-HOODIE' } });
     expect(stock!.stock).toBe(0);

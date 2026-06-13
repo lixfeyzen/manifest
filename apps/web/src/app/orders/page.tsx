@@ -49,11 +49,11 @@ export default async function OrdersPage({
             <AutoRefresh />
           </div>
           <Link href="/orders/new" className={buttonStyles('primary')}>
-            New Order
+            New order
           </Link>
         </div>
 
-        {/* Filter — minimal text tabs */}
+        {/* Filter: minimal text tabs */}
         <div className="flex flex-wrap gap-5 border-b border-brand-border text-sm">
           {STATUSES.map((s) => {
             const href = s === 'ALL' ? '/orders' : `/orders?status=${s}`;
@@ -110,7 +110,7 @@ export default async function OrdersPage({
               </thead>
               <tbody className="divide-y divide-brand-border">
                 {orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-brand-surface-2">
+                  <tr key={order.id} className="transition-colors hover:bg-brand-surface-2">
                     <td className="py-3">
                       <Link
                         href={`/orders/${order.id}`}
@@ -140,7 +140,7 @@ export default async function OrdersPage({
                           {eventMeta(order.lastEvent.type).label}
                         </span>
                       ) : (
-                        <span className="text-xs text-brand-muted">—</span>
+                        <span className="text-xs text-brand-muted">-</span>
                       )}
                     </td>
                     <td className="py-3 text-right text-xs text-brand-muted">

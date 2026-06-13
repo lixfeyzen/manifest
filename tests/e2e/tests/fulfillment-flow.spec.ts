@@ -5,7 +5,7 @@ import { expect, test } from '@playwright/test';
  * watch it reach FULFILLED, then send a duplicate webhook and confirm it is
  * ignored without creating a second invoice.
  */
-test('create → pay → fulfilled → duplicate ignored', async ({ page }) => {
+test('create -> pay -> fulfilled -> duplicate ignored', async ({ page }) => {
   // 1. Create an order.
   await page.goto('/orders/new');
   await expect(page.getByRole('heading', { name: 'New order' })).toBeVisible();
@@ -35,7 +35,7 @@ test('create → pay → fulfilled → duplicate ignored', async ({ page }) => {
   await page.getByRole('button', { name: 'Simulate Duplicate Webhook' }).click();
   await expect(page.getByText(/ignored/i)).toBeVisible({ timeout: 10_000 });
 
-  // 6. Still exactly one invoice with the same number — no duplicate created.
+  // 6. Still exactly one invoice with the same number: no duplicate created.
   await expect(page.getByText(/INV-\d{8}-/)).toHaveCount(1);
   expect(
     await page

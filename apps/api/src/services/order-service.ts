@@ -12,8 +12,8 @@ import { writeEvent } from './event-service.js';
 /**
  * Create a new order from validated input.
  *
- * Pricing is taken from the seeded InventoryItem table — never trusted from the
- * client — so the total can't be tampered with. Stock is NOT decremented here;
+ * Pricing is taken from the seeded InventoryItem table, never trusted from the
+ * client, so the total can't be tampered with. Stock is NOT decremented here;
  * reservation happens later during fulfillment (after payment), which is what
  * keeps unpaid orders from holding inventory.
  */

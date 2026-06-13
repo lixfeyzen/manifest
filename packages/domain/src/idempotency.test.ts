@@ -22,7 +22,10 @@ describe('decideIdempotency', () => {
     });
   });
 
-  it('allows reprocessing a previously failed event', () => {
-    expect(decideIdempotency(ProcessedEventStatus.FAILED)).toEqual({ kind: 'process' });
+  it('ignores a previously failed event (FAILED is never written, so it is treated as handled)', () => {
+    expect(decideIdempotency(ProcessedEventStatus.FAILED)).toEqual({
+      kind: 'ignore',
+      reason: 'already_processed',
+    });
   });
 });

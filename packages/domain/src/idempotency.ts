@@ -7,9 +7,9 @@ import { ProcessedEventStatus } from '@manifest/shared';
  */
 
 export type IdempotencyDecision =
-  | { kind: 'process' } // never seen before — process it
-  | { kind: 'ignore'; reason: 'already_processed' } // completed earlier — ignore safely
-  | { kind: 'ignore'; reason: 'in_progress' }; // concurrent duplicate — ignore safely
+  | { kind: 'process' } // never seen before, process it
+  | { kind: 'ignore'; reason: 'already_processed' } // completed earlier, ignore safely
+  | { kind: 'ignore'; reason: 'in_progress' }; // concurrent duplicate, ignore safely
 
 /**
  * Given the status of an existing ProcessedEvent (or null if none exists),
@@ -27,8 +27,10 @@ export function decideIdempotency(
   if (existingStatus === ProcessedEventStatus.PROCESSING) {
     return { kind: 'ignore', reason: 'in_progress' };
   }
-  // A previously FAILED event may be retried by reprocessing.
-  return { kind: 'process' };
+  // FAILED is never written today (the API writes PROCESSING then PROCESSED, and the
+  // worker sweep advances PROCESSING to PROCESSED), so any other status is treated as
+  // already handled rather than reprocessed (a reprocess would hit the unique key anyway).
+  return { kind: 'ignore', reason: 'already_processed' };
 }
 
 /** Standard response body returned by the webhook endpoint. */

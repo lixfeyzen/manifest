@@ -41,7 +41,7 @@ describe('payment webhook validation + signature ordering (REST integration)', (
   it('rejects a correctly-signed but schema-invalid body (400) and creates nothing', async () => {
     const order = await newOrder();
 
-    // Real order so orderId exists — failure is purely a Zod validation failure.
+    // Real order so orderId exists: failure is purely a Zod validation failure.
     // Two defects: amount is a string (should be int) and idempotencyKey is missing.
     const body = JSON.stringify({
       eventId: `evt_${order.id}`,

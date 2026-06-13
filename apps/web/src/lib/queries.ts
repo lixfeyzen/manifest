@@ -41,7 +41,7 @@ export async function retryFulfillment(orderId: string): Promise<RetryResult> {
 
 /**
  * Trigger a simulated payment webhook. Calls our own Next route, which signs the
- * payload (HMAC) server-side and forwards it to the API — so the signing secret
+ * payload (HMAC) server-side and forwards it to the API: so the signing secret
  * never touches the browser. The deterministic idempotencyKey lets "Simulate
  * Duplicate" re-send the exact same event.
  */

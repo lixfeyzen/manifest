@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "test:e2e": "playwright test",
-    "lint": "echo \"(no lint configured)\"",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

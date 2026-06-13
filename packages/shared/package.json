@@ -9,7 +9,6 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "lint": "echo \"(no lint configured)\"",
     "typecheck": "tsc --noEmit",
     "test": "echo \"(no tests in shared)\""
   },

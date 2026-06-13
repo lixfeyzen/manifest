@@ -11,23 +11,10 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-
-// One bar per day, segmented by where the day's orders currently sit in the
-// fulfillment pipeline — the product's whole premise, made visual.
-export interface ChartPoint {
-  date: string; // short label, e.g. "05 Jun"
-  today: boolean;
-  pending: number;
-  paid: number;
-  fulfilling: number;
-  fulfilled: number;
-  failed: number;
-  total: number;
-  hasFailedJob: boolean;
-}
+import type { ThroughputDay } from '@/lib/types';
 
 // Recharts needs string colours, so these mirror the brand tokens / StatusBadge
-// dots exactly (paid = brand primary #6A47E8, pending = chalice) — the chart can
+// dots exactly (paid = brand primary #6A47E8, pending = chalice): the chart can
 // never show a different violet from the rest of the app.
 const SEGMENTS = [
   { key: 'fulfilled', label: 'Fulfilled', color: '#10b981' },
@@ -44,7 +31,7 @@ const ACCENT = '#6a47e8'; // brand-primary
 interface TooltipProps {
   active?: boolean;
   label?: string;
-  payload?: Array<{ payload: ChartPoint }>;
+  payload?: Array<{ payload: ThroughputDay }>;
 }
 
 function ThroughputTooltip({ active, payload, label }: TooltipProps) {
@@ -88,12 +75,16 @@ function Legend() {
   );
 }
 
-export function OrdersChart({ data }: { data: ChartPoint[] }) {
+export function OrdersChart({ data }: { data: ThroughputDay[] }) {
   // Animate the bars in once, then freeze so the 3s auto-refresh never replays.
-  const reduced =
-    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const [animate, setAnimate] = useState(!reduced);
+  // Initial state is constant on both server and client to avoid a hydration
+  // mismatch; the reduced-motion check runs in an effect after mount.
+  const [animate, setAnimate] = useState(true);
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setAnimate(false);
+      return;
+    }
     const t = setTimeout(() => setAnimate(false), 900);
     return () => clearTimeout(t);
   }, []);

@@ -57,7 +57,7 @@ function mulberry32(seed: number): () => number {
 
 /**
  * A believable status for an order, given how old it is. History is terminal
- * (orders from days ago are done or failed — never still "pending"); only the
+ * (orders from days ago are done or failed, never still "pending"); only the
  * last day or two carries in-flight states, and today shows a live pipeline.
  * Failures are rare. This is the kind of truthfulness a careful reader checks.
  */
@@ -88,7 +88,7 @@ function buildPlan(): OrderSpec[] {
 
   const plan: OrderSpec[] = [];
   for (let daysAgo = 13; daysAgo >= 0; daysAgo--) {
-    const count = 2 + Math.floor(rand() * 4); // 2–5 orders per day
+    const count = 2 + Math.floor(rand() * 4); // 2-5 orders per day
     for (let k = 0; k < count; k++) {
       const status = statusFor(daysAgo, rand());
       // Failures land on the scarce item, so "insufficient stock" stays truthful.
@@ -147,7 +147,7 @@ function eventsFor(status: OrderStatus): string[] {
 async function seedOrders(): Promise<void> {
   // Only seed when empty so we never clobber orders created by hand.
   if ((await prisma.order.count()) > 0) {
-    console.log('Orders already present — skipping demo-order seed.');
+    console.log('Orders already present, skipping demo-order seed.');
     return;
   }
 
@@ -249,7 +249,7 @@ async function main(): Promise<void> {
   }
   console.log(`Seeded ${INVENTORY.length} inventory items.`);
 
-  // Demo data — local/dev only, never in production.
+  // Demo data, local/dev only, never in production.
   if (process.env.NODE_ENV !== 'production') {
     const email = 'demo@manifest.dev';
     const passwordHash = await bcrypt.hash('demo12345', 12);

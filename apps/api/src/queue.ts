@@ -12,7 +12,7 @@ export const redisConnection = new IORedis(env.REDIS_URL, {
 });
 
 /**
- * The fulfillment queue. The API is only a *producer* here — it enqueues jobs.
+ * The fulfillment queue. The API is only a *producer* here: it enqueues jobs.
  * The actual processing happens in apps/worker (the consumer). Splitting produce
  * from consume is what makes this event-driven: the webhook returns instantly and
  * the slow fulfillment work happens asynchronously.

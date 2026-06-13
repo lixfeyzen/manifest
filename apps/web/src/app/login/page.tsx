@@ -11,7 +11,7 @@ import { login } from '@/lib/queries';
 export default function LoginPage() {
   const router = useRouter();
   // Demo account is intentionally public (seeded, documented in the README), so the
-  // form starts pre-filled — a recruiter can sign in with a single click.
+  // form starts pre-filled, a recruiter can sign in with a single click.
   const [email, setEmail] = useState('demo@manifest.dev');
   const [password, setPassword] = useState('demo12345');
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +76,7 @@ export default function LoginPage() {
           )}
 
           <Button type="submit" disabled={busy} className="w-full">
-            {busy ? 'Signing in…' : 'Sign in'}
+            {busy ? 'Signing in...' : 'Sign in'}
           </Button>
         </form>
       </Card>

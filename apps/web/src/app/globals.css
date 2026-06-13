@@ -10,7 +10,7 @@
   --ease-std: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Restrained motion foundation — transform/opacity only (no CLS). */
+/* Restrained motion foundation: transform/opacity only (no CLS). */
 @keyframes mf-rise {
   from {
     opacity: 0;

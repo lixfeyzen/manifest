@@ -39,7 +39,7 @@ export async function seedInventory(): Promise<void> {
   }
 }
 
-/** Reset + reseed inventory — the standard per-test starting point. */
+/** Reset + reseed inventory: the standard per-test starting point. */
 export async function resetAndSeed(): Promise<void> {
   await resetDb();
   await seedInventory();

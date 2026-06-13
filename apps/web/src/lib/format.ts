@@ -1,4 +1,4 @@
-/** Format an integer rupiah amount (e.g. 120000 → "Rp 120.000"). */
+/** Format an integer rupiah amount (e.g. 120000 -> "Rp 120.000"). */
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -25,7 +25,7 @@ export function shortId(id: string): string {
 
 /**
  * Title-case an UPPERCASE / SCREAMING_SNAKE enum for display:
- * "FULFILLED" → "Fulfilled", "ALL" → "All". Keeps enum values out of the UI.
+ * "FULFILLED" -> "Fulfilled", "ALL" -> "All". Keeps enum values out of the UI.
  */
 export function formatStatus(value: string): string {
   return value
@@ -37,7 +37,7 @@ export function formatStatus(value: string): string {
 
 /**
  * Derive a human display name from an email's local part:
- * "olivia.martin@gmail.com" → "Olivia Martin". Falls back to the email.
+ * "olivia.martin@gmail.com" -> "Olivia Martin". Falls back to the email.
  */
 export function formatCustomerName(email: string): string {
   const local = email.split('@')[0] ?? '';

@@ -46,7 +46,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         <AutoRefresh />
       </div>
 
-      {/* Header — flat, hierarchy from type + space */}
+      {/* Header: flat, hierarchy from type + space */}
       <div>
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="min-w-0">
@@ -61,7 +61,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               {formatCustomerName(order.customerEmail)}
             </p>
             <p className="text-sm text-brand-muted">
-              {order.customerEmail} ·{' '}
+              {order.customerEmail} -{' '}
               <span title={formatDateTime(order.createdAt)}>
                 created {formatRelative(order.createdAt)}
               </span>
@@ -186,12 +186,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 />
               </dl>
             ) : (
-              <Empty>No fulfillment job yet — created after payment.</Empty>
+              <Empty>No fulfillment job yet, created after payment.</Empty>
             )}
           </Section>
         </div>
 
-        {/* Activity — the one framed block */}
+        {/* Activity: the one framed block */}
         <Card className="p-5">
           <Eyebrow>Activity</Eyebrow>
           <div className="mt-4">
