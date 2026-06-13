@@ -39,8 +39,10 @@ export default defineConfig({
   ],
   webServer: {
     // Locally we reuse the already-running `pnpm dev` stack. In CI nothing is
-    // running, so boot the whole stack (web + api + worker) via Turbo.
-    command: process.env.CI ? 'pnpm dev' : 'pnpm --filter @manifest/web dev',
+    // running, so boot the whole stack (web + api + worker) via Turbo. Playwright
+    // spawns this from the config dir (tests/e2e), so `-w` targets the workspace
+    // root's `dev` script instead of @manifest/e2e (which has none).
+    command: process.env.CI ? 'pnpm -w run dev' : 'pnpm --filter @manifest/web dev',
     url: WEB_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
