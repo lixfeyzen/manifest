@@ -7,7 +7,7 @@ const authFile = 'playwright/.auth/user.json';
 setup('authenticate', async ({ page }) => {
   await page.goto('/login');
   await page.getByLabel('Email').fill('demo@manifest.dev');
-  await page.getByLabel('Password').fill('demo12345');
+  await page.getByLabel('Password').fill('fulfillment');
   await page.getByRole('button', { name: 'Sign in' }).click();
 
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible({ timeout: 20_000 });

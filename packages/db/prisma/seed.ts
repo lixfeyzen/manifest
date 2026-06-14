@@ -252,13 +252,13 @@ async function main(): Promise<void> {
   // Demo data, local/dev only, never in production.
   if (process.env.NODE_ENV !== 'production') {
     const email = 'demo@manifest.dev';
-    const passwordHash = await bcrypt.hash('demo12345', 12);
+    const passwordHash = await bcrypt.hash('fulfillment', 12);
     await prisma.user.upsert({
       where: { email },
       update: { passwordHash },
       create: { email, passwordHash },
     });
-    console.log(`Seeded demo user: ${email} / demo12345`);
+    console.log(`Seeded demo user: ${email} / fulfillment`);
 
     await seedOrders();
   }

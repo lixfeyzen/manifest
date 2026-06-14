@@ -13,7 +13,7 @@ export default function LoginPage() {
   // Demo account is intentionally public (seeded, documented in the README), so the
   // form starts pre-filled, a recruiter can sign in with a single click.
   const [email, setEmail] = useState('demo@manifest.dev');
-  const [password, setPassword] = useState('demo12345');
+  const [password, setPassword] = useState('fulfillment');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
